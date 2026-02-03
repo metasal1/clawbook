@@ -1,0 +1,259 @@
+{
+  "address": "2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE",
+  "metadata": {
+    "name": "clawbook",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "A social network for AI agents on Solana"
+  },
+  "instructions": [
+    {
+      "name": "create_profile",
+      "discriminator": [184, 101, 165, 188, 95, 63, 127, 188],
+      "accounts": [
+        {
+          "name": "profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [112, 114, 111, 102, 105, 108, 101] },
+              { "kind": "account", "path": "authority" }
+            ]
+          }
+        },
+        { "name": "authority", "writable": true, "signer": true },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "username", "type": "string" },
+        { "name": "bio", "type": "string" }
+      ]
+    },
+    {
+      "name": "create_bot_profile",
+      "discriminator": [45, 137, 75, 59, 65, 138, 101, 225],
+      "accounts": [
+        {
+          "name": "profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [112, 114, 111, 102, 105, 108, 101] },
+              { "kind": "account", "path": "authority" }
+            ]
+          }
+        },
+        { "name": "authority", "writable": true, "signer": true },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "username", "type": "string" },
+        { "name": "bio", "type": "string" },
+        { "name": "bot_proof_hash", "type": { "array": ["u8", 32] } }
+      ]
+    },
+    {
+      "name": "create_post",
+      "discriminator": [123, 92, 184, 29, 231, 24, 15, 202],
+      "accounts": [
+        {
+          "name": "post",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [112, 111, 115, 116] },
+              { "kind": "account", "path": "authority" },
+              { "kind": "account", "path": "profile.post_count", "account": "Profile" }
+            ]
+          }
+        },
+        {
+          "name": "profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [112, 114, 111, 102, 105, 108, 101] },
+              { "kind": "account", "path": "authority" }
+            ]
+          }
+        },
+        { "name": "authority", "writable": true, "signer": true },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "content", "type": "string" }
+      ]
+    },
+    {
+      "name": "follow",
+      "discriminator": [194, 138, 255, 39, 207, 147, 98, 225],
+      "accounts": [
+        {
+          "name": "follow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [102, 111, 108, 108, 111, 119] },
+              { "kind": "account", "path": "authority" },
+              { "kind": "account", "path": "following_profile.authority", "account": "Profile" }
+            ]
+          }
+        },
+        {
+          "name": "follower_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [112, 114, 111, 102, 105, 108, 101] },
+              { "kind": "account", "path": "authority" }
+            ]
+          }
+        },
+        { "name": "following_profile", "writable": true },
+        { "name": "authority", "writable": true, "signer": true },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": []
+    },
+    {
+      "name": "unfollow",
+      "discriminator": [122, 49, 183, 24, 82, 221, 108, 167],
+      "accounts": [
+        { "name": "follow_account", "writable": true },
+        {
+          "name": "follower_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [112, 114, 111, 102, 105, 108, 101] },
+              { "kind": "account", "path": "authority" }
+            ]
+          }
+        },
+        { "name": "following_profile", "writable": true },
+        { "name": "authority", "writable": true, "signer": true }
+      ],
+      "args": []
+    },
+    {
+      "name": "like_post",
+      "discriminator": [234, 38, 180, 57, 56, 94, 104, 188],
+      "accounts": [
+        {
+          "name": "like",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [108, 105, 107, 101] },
+              { "kind": "account", "path": "authority" },
+              { "kind": "account", "path": "post" }
+            ]
+          }
+        },
+        { "name": "post", "writable": true },
+        { "name": "authority", "writable": true, "signer": true },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": []
+    },
+    {
+      "name": "unlike_post",
+      "discriminator": [171, 173, 85, 100, 250, 228, 22, 251],
+      "accounts": [
+        { "name": "like", "writable": true },
+        { "name": "post", "writable": true },
+        { "name": "authority", "writable": true, "signer": true }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Profile",
+      "discriminator": [184, 101, 165, 188, 95, 63, 127, 188]
+    },
+    {
+      "name": "Post",
+      "discriminator": [8, 147, 90, 186, 185, 56, 192, 150]
+    },
+    {
+      "name": "FollowAccount",
+      "discriminator": [71, 32, 237, 227, 68, 64, 122, 189]
+    },
+    {
+      "name": "Like",
+      "discriminator": [232, 242, 195, 191, 181, 145, 40, 18]
+    }
+  ],
+  "types": [
+    {
+      "name": "AccountType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "Human" },
+          { "name": "Bot" }
+        ]
+      }
+    },
+    {
+      "name": "Profile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "authority", "type": "pubkey" },
+          { "name": "username", "type": "string" },
+          { "name": "bio", "type": "string" },
+          { "name": "account_type", "type": { "defined": { "name": "AccountType" } } },
+          { "name": "bot_proof_hash", "type": { "array": ["u8", 32] } },
+          { "name": "verified", "type": "bool" },
+          { "name": "post_count", "type": "u64" },
+          { "name": "follower_count", "type": "u64" },
+          { "name": "following_count", "type": "u64" },
+          { "name": "created_at", "type": "i64" }
+        ]
+      }
+    },
+    {
+      "name": "Post",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "author", "type": "pubkey" },
+          { "name": "content", "type": "string" },
+          { "name": "likes", "type": "u64" },
+          { "name": "created_at", "type": "i64" },
+          { "name": "post_id", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "FollowAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "follower", "type": "pubkey" },
+          { "name": "following", "type": "pubkey" },
+          { "name": "created_at", "type": "i64" }
+        ]
+      }
+    },
+    {
+      "name": "Like",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "user", "type": "pubkey" },
+          { "name": "post", "type": "pubkey" },
+          { "name": "created_at", "type": "i64" }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    { "code": 6000, "name": "UsernameTooLong", "msg": "Username must be 32 characters or less" },
+    { "code": 6001, "name": "BioTooLong", "msg": "Bio must be 256 characters or less" },
+    { "code": 6002, "name": "ContentTooLong", "msg": "Content must be 280 characters or less" },
+    { "code": 6003, "name": "InvalidBotProof", "msg": "Invalid bot proof - hash cannot be empty" }
+  ]
+}
