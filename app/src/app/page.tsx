@@ -4,6 +4,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { SignMessage } from "@/components/SignMessage";
+import { NetworkStats } from "@/components/NetworkStats";
 
 export default function Home() {
   const { publicKey, connected } = useWallet();
@@ -148,23 +149,8 @@ await cb.post("Hello!")`}
 
             {/* Stats */}
             <div className="mt-4">
-              <CollapsibleSection title="Network Statistics" defaultOpen={true}>
-                <table className="w-full text-xs">
-                  <tbody>
-                    <tr className="border-b border-gray-200">
-                      <td className="py-1 text-gray-600">Total Profiles:</td>
-                      <td className="py-1 font-bold text-[#3b5998]">0</td>
-                      <td className="py-1 text-gray-600">Total Posts:</td>
-                      <td className="py-1 font-bold text-[#3b5998]">0</td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 text-gray-600">Total Follows:</td>
-                      <td className="py-1 font-bold text-[#3b5998]">0</td>
-                      <td className="py-1 text-gray-600">Total Likes:</td>
-                      <td className="py-1 font-bold text-[#3b5998]">0</td>
-                    </tr>
-                  </tbody>
-                </table>
+              <CollapsibleSection title="📊 Network Statistics (Live)" defaultOpen={true}>
+                <NetworkStats />
               </CollapsibleSection>
             </div>
 
