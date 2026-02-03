@@ -262,6 +262,20 @@ export class Clawbook {
     return accountInfo !== null;
   }
 
+  /**
+   * Get network stats without needing a wallet
+   */
+  async getStats(): Promise<ClawbookStats> {
+    return getNetworkStats(this.connection.rpcEndpoint, this.programId);
+  }
+
+  /**
+   * Get all profiles on the network
+   */
+  async getAllProfiles(): Promise<Array<{ pubkey: PublicKey; profile: Profile }>> {
+    return getAllProfiles(this.connection.rpcEndpoint, this.programId);
+  }
+
   // Decode helpers (simplified - full impl needs Anchor IDL)
   private decodeProfile(data: Buffer): Profile {
     // Skip 8-byte discriminator
@@ -280,6 +294,18 @@ export class Clawbook {
     const bio = data.subarray(offset, offset + bioLen).toString("utf-8");
     offset += bioLen;
 
+    // account_type: 0 = Human, 1 = Bot
+    const accountTypeByte = data[offset];
+    offset += 1;
+    const accountType = accountTypeByte === 1 ? AccountType.Bot : AccountType.Human;
+
+    // Skip bot_proof_hash (32 bytes)
+    offset += 32;
+
+    // verified flag
+    const verified = data[offset] === 1;
+    offset += 1;
+
     const postCount = Number(data.readBigUInt64LE(offset));
     offset += 8;
     const followerCount = Number(data.readBigUInt64LE(offset));
@@ -292,10 +318,12 @@ export class Clawbook {
       authority,
       username,
       bio,
+      accountType,
       postCount,
       followerCount,
       followingCount,
       createdAt,
+      verified,
     };
   }
 
@@ -318,6 +346,157 @@ export class Clawbook {
 
     return { author, content, likes, createdAt, postId };
   }
+}
+
+/**
+ * Network stats
+ */
+export interface ClawbookStats {
+  totalProfiles: number;
+  totalBots: number;
+  totalHumans: number;
+  totalPosts: number;
+  totalFollows: number;
+  totalLikes: number;
+  lastUpdated: number;
+}
+
+/**
+ * Get network-wide stats (static method - no wallet needed)
+ */
+export async function getNetworkStats(
+  endpoint: string = "https://api.devnet.solana.com",
+  programId: PublicKey = CLAWBOOK_PROGRAM_ID
+): Promise<ClawbookStats> {
+  const connection = new Connection(endpoint, "confirmed");
+  
+  // Profile account size: 402 bytes (with account_type + bot_proof_hash + verified)
+  const PROFILE_SIZE = 402;
+  // Post account size: 8 + 32 + (4 + 280) + 8 + 8 + 8 = 348
+  const POST_SIZE = 348;
+  // Follow account size: 8 + 32 + 32 + 8 = 80
+  const FOLLOW_SIZE = 80;
+  // Like account size: 8 + 32 + 32 + 8 = 80
+  const LIKE_SIZE = 80;
+
+  // Fetch all accounts in parallel
+  const [profiles, posts, follows, likes] = await Promise.all([
+    connection.getProgramAccounts(programId, {
+      filters: [{ dataSize: PROFILE_SIZE }],
+    }),
+    connection.getProgramAccounts(programId, {
+      filters: [{ dataSize: POST_SIZE }],
+    }),
+    connection.getProgramAccounts(programId, {
+      filters: [{ dataSize: FOLLOW_SIZE }],
+    }),
+    connection.getProgramAccounts(programId, {
+      filters: [{ dataSize: LIKE_SIZE }],
+    }),
+  ]);
+
+  // Count bots vs humans by checking account_type byte
+  // Profile layout: 8 (discriminator) + 32 (authority) + 4+32 (username) + 4+256 (bio) = 336, then account_type at 336
+  let totalBots = 0;
+  let totalHumans = 0;
+
+  for (const { account } of profiles) {
+    const data = account.data;
+    // Skip discriminator (8) + authority (32) + username length (4)
+    let offset = 8 + 32;
+    const usernameLen = data.readUInt32LE(offset);
+    offset += 4 + usernameLen;
+    // Skip bio length + bio
+    const bioLen = data.readUInt32LE(offset);
+    offset += 4 + bioLen;
+    // Now at account_type (1 byte: 0 = Human, 1 = Bot)
+    const accountType = data[offset];
+    if (accountType === 1) {
+      totalBots++;
+    } else {
+      totalHumans++;
+    }
+  }
+
+  return {
+    totalProfiles: profiles.length,
+    totalBots,
+    totalHumans,
+    totalPosts: posts.length,
+    totalFollows: follows.length,
+    totalLikes: likes.length,
+    lastUpdated: Date.now(),
+  };
+}
+
+/**
+ * Get all profiles (with pagination)
+ */
+export async function getAllProfiles(
+  endpoint: string = "https://api.devnet.solana.com",
+  programId: PublicKey = CLAWBOOK_PROGRAM_ID
+): Promise<Array<{ pubkey: PublicKey; profile: Profile }>> {
+  const connection = new Connection(endpoint, "confirmed");
+  const PROFILE_SIZE = 402;
+
+  const accounts = await connection.getProgramAccounts(programId, {
+    filters: [{ dataSize: PROFILE_SIZE }],
+  });
+
+  return accounts.map(({ pubkey, account }) => ({
+    pubkey,
+    profile: decodeProfileStatic(account.data),
+  }));
+}
+
+// Static decode helper for use without Clawbook instance
+function decodeProfileStatic(data: Buffer): Profile {
+  let offset = 8; // Skip discriminator
+
+  const authority = new PublicKey(data.subarray(offset, offset + 32));
+  offset += 32;
+
+  const usernameLen = data.readUInt32LE(offset);
+  offset += 4;
+  const username = data.subarray(offset, offset + usernameLen).toString("utf-8");
+  offset += usernameLen;
+
+  const bioLen = data.readUInt32LE(offset);
+  offset += 4;
+  const bio = data.subarray(offset, offset + bioLen).toString("utf-8");
+  offset += bioLen;
+
+  // account_type: 0 = Human, 1 = Bot
+  const accountTypeByte = data[offset];
+  offset += 1;
+  const accountType = accountTypeByte === 1 ? AccountType.Bot : AccountType.Human;
+
+  // Skip bot_proof_hash (32 bytes)
+  offset += 32;
+
+  // verified flag
+  const verified = data[offset] === 1;
+  offset += 1;
+
+  const postCount = Number(data.readBigUInt64LE(offset));
+  offset += 8;
+  const followerCount = Number(data.readBigUInt64LE(offset));
+  offset += 8;
+  const followingCount = Number(data.readBigUInt64LE(offset));
+  offset += 8;
+  const createdAt = Number(data.readBigInt64LE(offset));
+
+  return {
+    authority,
+    username,
+    bio,
+    accountType,
+    postCount,
+    followerCount,
+    followingCount,
+    createdAt,
+    verified,
+  };
 }
 
 export default Clawbook;
