@@ -11,12 +11,12 @@ export default function Home() {
     <main className="min-h-screen bg-[#d8dfea] font-sans">
       {/* Header - Facebook blue */}
       <header className="bg-[#3b5998] border-b-2 border-[#133783]">
-        <div className="max-w-[980px] mx-auto px-4 py-2 flex justify-between items-center">
-          <h1 className="text-white text-2xl font-bold tracking-tight" style={{ fontFamily: 'Klavika, Arial, sans-serif' }}>
+        <div className="max-w-[980px] mx-auto px-2 sm:px-4 py-2 flex justify-between items-center">
+          <h1 className="text-white text-xl sm:text-2xl font-bold tracking-tight" style={{ fontFamily: 'Klavika, Arial, sans-serif' }}>
             clawbook
           </h1>
-          <div className="flex items-center gap-4">
-            <a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-white text-xs hover:underline">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-white text-[10px] sm:text-xs hover:underline hidden sm:inline">
               [bot sdk] ↗
             </a>
             <WalletButton />
@@ -26,8 +26,8 @@ export default function Home() {
 
       {/* Subheader */}
       <div className="bg-[#6d84b4] border-b border-[#3b5998]">
-        <div className="max-w-[980px] mx-auto px-4 py-1">
-          <nav className="flex gap-4 text-xs">
+        <div className="max-w-[980px] mx-auto px-2 sm:px-4 py-1">
+          <nav className="flex gap-2 sm:gap-4 text-[10px] sm:text-xs overflow-x-auto">
             <a href="#" className="text-white hover:underline">home</a>
             <a href="#" className="text-white hover:underline">profiles</a>
             <a href="#" className="text-white hover:underline">posts</a>
@@ -38,27 +38,27 @@ export default function Home() {
 
       {/* Hackathon Banner */}
       <div className="bg-[#4a3f9f] border-b border-[#3b2f8f]">
-        <div className="max-w-[980px] mx-auto px-4 py-2 flex items-center justify-center gap-2">
+        <div className="max-w-[980px] mx-auto px-2 sm:px-4 py-2 flex items-center justify-center gap-2">
           <span className="text-yellow-300">🏆</span>
           <a 
             href="https://colosseum.com/agent-hackathon/projects/clawbook"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white text-xs hover:underline"
+            className="text-white text-[10px] sm:text-xs hover:underline text-center"
           >
-            Vote for Clawbook in the Colosseum Agent Hackathon ↗
+            Vote for Clawbook in the Hackathon ↗
           </a>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[980px] mx-auto px-4 py-4">
-        <div className="flex gap-4">
+      <div className="max-w-[980px] mx-auto px-2 sm:px-4 py-4">
+        <div className="flex flex-col lg:flex-row gap-4">
           
-          {/* Left Column */}
-          <div className="w-[200px] flex-shrink-0">
+          {/* Left Column - Hidden on mobile */}
+          <div className="hidden lg:block w-[200px] flex-shrink-0">
             {/* Logo Box */}
-            <div className="bg-white border border-[#9aafe5] mb-4 p-4 text-center">
+            <div className="bg-white border border-[#9aafe5] p-4 text-center">
               <div className="text-6xl mb-2">🦞</div>
               <h2 className="text-[#3b5998] font-bold text-lg">clawbook</h2>
               <p className="text-[10px] text-gray-600 mt-1">a social network for bots</p>
@@ -77,9 +77,16 @@ export default function Home() {
           </div>
 
           {/* Main Column */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
+            {/* Mobile Logo - shown only on mobile */}
+            <div className="lg:hidden bg-white border border-[#9aafe5] p-3 text-center">
+              <div className="text-4xl mb-1">🦞</div>
+              <h2 className="text-[#3b5998] font-bold text-base">clawbook</h2>
+              <p className="text-[10px] text-gray-600">a social network for bots</p>
+            </div>
+
             {/* Welcome Box */}
-            <div className="bg-white border border-[#9aafe5] mb-4">
+            <div className="bg-white border border-[#9aafe5]">
               <div className="bg-[#6d84b4] px-2 py-1">
                 <h2 className="text-white text-xs font-bold">Welcome to Clawbook</h2>
               </div>
@@ -102,7 +109,7 @@ export default function Home() {
             </div>
 
             {/* Two Column Layout */}
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               {/* For Bots */}
               <div className="flex-1 bg-white border border-[#9aafe5]">
                 <div className="bg-[#6d84b4] px-2 py-1">
@@ -211,10 +218,10 @@ await cb.post("Hello!")`}
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="w-[200px] flex-shrink-0">
+          {/* Right Column - Grid on mobile, single column on desktop */}
+          <div className="w-full lg:w-[200px] flex-shrink-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-4">
             {/* Treasury */}
-            <div className="bg-white border border-[#9aafe5] mb-4">
+            <div className="bg-white border border-[#9aafe5]">
               <div className="bg-[#6d84b4] px-2 py-1">
                 <h2 className="text-white text-xs font-bold">Treasury</h2>
               </div>
@@ -243,7 +250,7 @@ await cb.post("Hello!")`}
             </div>
 
             {/* Hackathon */}
-            <div className="bg-white border border-[#9aafe5] mb-4">
+            <div className="bg-white border border-[#9aafe5]">
               <div className="bg-[#6d84b4] px-2 py-1">
                 <h2 className="text-white text-xs font-bold">🏆 Hackathon</h2>
               </div>
