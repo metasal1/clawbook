@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PostFeed } from "@/components/PostFeed";
@@ -187,7 +187,10 @@ export default function ViewProfile() {
         data: getFollowDisc(),
       });
 
-      const tx = new Transaction().add(ix);
+      const tx = new Transaction().add(
+        ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }),
+        ix
+      );
       tx.feePayer = publicKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
       const signed = await signTransaction(tx);
@@ -237,7 +240,10 @@ export default function ViewProfile() {
         data: getUnfollowDisc(),
       });
 
-      const tx = new Transaction().add(ix);
+      const tx = new Transaction().add(
+        ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }),
+        ix
+      );
       tx.feePayer = publicKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
       const signed = await signTransaction(tx);

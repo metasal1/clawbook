@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
@@ -188,7 +188,7 @@ export default function ProfilePage() {
         data: ixData,
       });
 
-      const tx = new Transaction().add(ix);
+      const tx = new Transaction().add(ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }), ix);
       tx.feePayer = publicKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
       const signed = await signTransaction(tx);
@@ -250,7 +250,7 @@ export default function ProfilePage() {
         data: ixData,
       });
 
-      const tx = new Transaction().add(ix);
+      const tx = new Transaction().add(ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }), ix);
       tx.feePayer = publicKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
       const signed = await signTransaction(tx);
@@ -312,7 +312,7 @@ export default function ProfilePage() {
         data: ixData,
       });
 
-      const tx = new Transaction().add(ix);
+      const tx = new Transaction().add(ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }), ix);
       tx.feePayer = publicKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
       const signed = await signTransaction(tx);
@@ -349,7 +349,7 @@ export default function ProfilePage() {
         data: getCloseProfileDisc(),
       });
 
-      const tx = new Transaction().add(ix);
+      const tx = new Transaction().add(ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }), ix);
       tx.feePayer = publicKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
       const signed = await signTransaction(tx);

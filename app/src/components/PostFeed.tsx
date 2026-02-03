@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import Link from "next/link";
 
 const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
@@ -77,7 +77,7 @@ export function PostFeed({ author }: { author?: string }) {
         data: getLikePostDisc(),
       });
 
-      const tx = new Transaction().add(ix);
+      const tx = new Transaction().add(ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }), ix);
       tx.feePayer = publicKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
       const signed = await signTransaction(tx);
