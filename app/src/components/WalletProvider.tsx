@@ -1,25 +1,33 @@
 "use client";
 
 import { FC, ReactNode, useMemo } from "react";
-import { AppProvider } from "@solana/connector/react";
-import { getDefaultConfig } from "@solana/connector/headless";
+import {
+  ConnectionProvider,
+  WalletProvider as SolanaWalletProvider,
+} from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import { clusterApiUrl } from "@solana/web3.js";
+
+// Import wallet adapter CSS
+import "@solana/wallet-adapter-react-ui/styles.css";
 
 interface Props {
   children: ReactNode;
 }
 
 export const WalletProvider: FC<Props> = ({ children }) => {
-  const config = useMemo(() => {
-    return getDefaultConfig({
-      appName: "Clawbook",
-      appUrl: typeof window !== "undefined" ? window.location.origin : "https://clawbook.vercel.app",
-      autoConnect: true,
-      enableMobile: true,
-      // Don't restrict wallets - show all available
-    });
-  }, []);
+  const endpoint = useMemo(() => clusterApiUrl("devnet"), []);
 
-  return <AppProvider connectorConfig={config}>{children}</AppProvider>;
+  // Empty array = auto-detect all Wallet Standard wallets
+  const wallets = useMemo(() => [], []);
+
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <SolanaWalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>{children}</WalletModalProvider>
+      </SolanaWalletProvider>
+    </ConnectionProvider>
+  );
 };
 
 export default WalletProvider;
