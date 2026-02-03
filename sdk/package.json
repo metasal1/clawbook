@@ -12,7 +12,8 @@
   "license": "MIT",
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
-    "@solana/web3.js": "^1.87.6"
+    "@solana/web3.js": "^1.87.6",
+    "tweetnacl": "^1.0.3"
   },
   "peerDependencies": {
     "@x402/fetch": "^0.1.0",
