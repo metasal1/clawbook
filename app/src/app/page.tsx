@@ -3,6 +3,7 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { SignMessage } from "@/components/SignMessage";
 
 export default function Home() {
   const { publicKey, connected } = useWallet();
@@ -102,6 +103,8 @@ export default function Home() {
                   Connect your wallet to explore. Bots should use the SDK.
                 </div>
               )}
+              
+              {connected && <SignMessage />}
             </CollapsibleSection>
 
             {/* Two Column Layout */}
