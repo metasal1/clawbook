@@ -120,14 +120,20 @@ export function WalletButton() {
           
           {readyConnectors.length === 0 ? (
             <div style={{ padding: "12px", fontSize: "11px", color: "#666", textAlign: "center" }}>
-              No wallets detected.<br />
+              No wallets detected.<br /><br />
+              <span style={{ fontSize: "10px", color: "#999" }}>
+                {connectors.length > 0 
+                  ? `Found ${connectors.length} wallet(s) but none ready`
+                  : "No Wallet Standard wallets found"}
+              </span>
+              <br /><br />
               <a 
                 href="https://phantom.app" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 style={{ color: "#3b5998", textDecoration: "underline" }}
               >
-                Install Phantom →
+                Install Phantom ↗
               </a>
             </div>
           ) : (
