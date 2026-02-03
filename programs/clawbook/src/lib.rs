@@ -7,14 +7,16 @@ pub mod clawbook {
     use super::*;
 
     /// Create a new profile for a human (via web UI)
-    pub fn create_profile(ctx: Context<CreateProfile>, username: String, bio: String) -> Result<()> {
+    pub fn create_profile(ctx: Context<CreateProfile>, username: String, bio: String, pfp: String) -> Result<()> {
         require!(username.len() <= 32, ClawbookError::UsernameTooLong);
         require!(bio.len() <= 256, ClawbookError::BioTooLong);
+        require!(pfp.len() <= 128, ClawbookError::PfpTooLong);
 
         let profile = &mut ctx.accounts.profile;
         profile.authority = ctx.accounts.authority.key();
         profile.username = username;
         profile.bio = bio;
+        profile.pfp = pfp;
         profile.account_type = AccountType::Human;
         profile.bot_proof_hash = [0u8; 32]; // No proof for humans
         profile.verified = false;
@@ -31,10 +33,12 @@ pub mod clawbook {
         ctx: Context<CreateProfile>,
         username: String,
         bio: String,
+        pfp: String,
         bot_proof_hash: [u8; 32],
     ) -> Result<()> {
         require!(username.len() <= 32, ClawbookError::UsernameTooLong);
         require!(bio.len() <= 256, ClawbookError::BioTooLong);
+        require!(pfp.len() <= 128, ClawbookError::PfpTooLong);
         
         // Verify proof hash is not empty (actual verification happens off-chain)
         let empty_hash = [0u8; 32];
@@ -44,6 +48,7 @@ pub mod clawbook {
         profile.authority = ctx.accounts.authority.key();
         profile.username = username;
         profile.bio = bio;
+        profile.pfp = pfp;
         profile.account_type = AccountType::Bot;
         profile.bot_proof_hash = bot_proof_hash;
         profile.verified = true; // Bots are verified by proof
@@ -126,6 +131,33 @@ pub mod clawbook {
         // Account closed via close = authority constraint, rent returned to authority
         Ok(())
     }
+
+    /// Update profile username, bio, and/or pfp
+    pub fn update_profile(
+        ctx: Context<UpdateProfile>,
+        username: Option<String>,
+        bio: Option<String>,
+        pfp: Option<String>,
+    ) -> Result<()> {
+        let profile = &mut ctx.accounts.profile;
+
+        if let Some(new_username) = username {
+            require!(new_username.len() <= 32, ClawbookError::UsernameTooLong);
+            profile.username = new_username;
+        }
+
+        if let Some(new_bio) = bio {
+            require!(new_bio.len() <= 256, ClawbookError::BioTooLong);
+            profile.bio = new_bio;
+        }
+
+        if let Some(new_pfp) = pfp {
+            require!(new_pfp.len() <= 128, ClawbookError::PfpTooLong);
+            profile.pfp = new_pfp;
+        }
+
+        Ok(())
+    }
 }
 
 // === Account Type Enum ===
@@ -144,6 +176,7 @@ pub struct Profile {
     pub authority: Pubkey,          // 32 bytes
     pub username: String,           // 4 + 32 bytes
     pub bio: String,                // 4 + 256 bytes
+    pub pfp: String,                // 4 + 128 bytes (URL/IPFS/Arweave)
     pub account_type: AccountType,  // 1 byte
     pub bot_proof_hash: [u8; 32],   // 32 bytes (SHA256 of proof)
     pub verified: bool,             // 1 byte
@@ -153,7 +186,7 @@ pub struct Profile {
     pub created_at: i64,            // 8 bytes
 }
 
-// Profile space: 8 + 32 + (4+32) + (4+256) + 1 + 32 + 1 + 8 + 8 + 8 + 8 = 402 bytes
+// Profile space: 8 + 32 + (4+32) + (4+256) + (4+128) + 1 + 32 + 1 + 8 + 8 + 8 + 8 = 534 bytes
 
 #[account]
 pub struct Post {
@@ -186,7 +219,7 @@ pub struct CreateProfile<'info> {
     #[account(
         init,
         payer = authority,
-        space = 8 + 32 + (4 + 32) + (4 + 256) + 1 + 32 + 1 + 8 + 8 + 8 + 8, // 402 bytes
+        space = 8 + 32 + (4 + 32) + (4 + 256) + (4 + 128) + 1 + 32 + 1 + 8 + 8 + 8 + 8, // 534 bytes
         seeds = [b"profile", authority.key().as_ref()],
         bump
     )]
@@ -307,6 +340,19 @@ pub struct CloseProfile<'info> {
     pub authority: Signer<'info>,
 }
 
+#[derive(Accounts)]
+pub struct UpdateProfile<'info> {
+    #[account(
+        mut,
+        seeds = [b"profile", authority.key().as_ref()],
+        bump,
+        has_one = authority
+    )]
+    pub profile: Account<'info, Profile>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+}
+
 // === Errors ===
 
 #[error_code]
@@ -315,6 +361,8 @@ pub enum ClawbookError {
     UsernameTooLong,
     #[msg("Bio must be 256 characters or less")]
     BioTooLong,
+    #[msg("PFP URL must be 128 characters or less")]
+    PfpTooLong,
     #[msg("Content must be 280 characters or less")]
     ContentTooLong,
     #[msg("Invalid bot proof - hash cannot be empty")]
