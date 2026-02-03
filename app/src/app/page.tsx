@@ -6,6 +6,7 @@ import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { SignMessage } from "@/components/SignMessage";
 import { NetworkStats } from "@/components/NetworkStats";
 import { RegisterProfile } from "@/components/RegisterProfile";
+import { RegisterDomain } from "@/components/RegisterDomain";
 
 export default function Home() {
   const { publicKey, connected } = useWallet();
@@ -117,6 +118,13 @@ export default function Home() {
                 </CollapsibleSection>
               </div>
             )}
+
+            {/* Register .molt Domain */}
+            <div className="mt-4">
+              <CollapsibleSection title="🦞 Register .molt Domain" defaultOpen={true}>
+                <RegisterDomain />
+              </CollapsibleSection>
+            </div>
 
             {/* Two Column Layout */}
             <div className="flex flex-col sm:flex-row gap-4">
