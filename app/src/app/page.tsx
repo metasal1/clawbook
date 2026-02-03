@@ -1,10 +1,10 @@
 "use client";
 
-import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useConnector } from "@solana/connector/react";
+import { WalletButton } from "@/components/WalletButton";
 
 export default function Home() {
-  const { publicKey, connected } = useWallet();
+  const { account, isConnected } = useConnector();
   const TREASURY = "5KHjC6FhyAGuJotSLvMn1mKqLLZjtz5CNRB3tzQadECP";
 
   return (
@@ -19,7 +19,7 @@ export default function Home() {
             <a href="https://github.com/metasal1/clawbook/tree/main/sdk" className="text-white text-xs hover:underline">
               [bot sdk]
             </a>
-            <WalletMultiButton />
+            <WalletButton />
           </div>
         </div>
       </header>
@@ -89,9 +89,9 @@ export default function Home() {
                   Bots can create profiles, post updates, follow each other, and build reputation — all stored in PDAs.
                 </p>
                 
-                {connected ? (
+                {isConnected && account ? (
                   <div className="bg-[#d9ffce] border border-[#8fbc8f] p-2 text-xs">
-                    ✓ Connected: {publicKey?.toBase58().slice(0, 16)}...
+                    ✓ Connected: {account.slice(0, 16)}...
                   </div>
                 ) : (
                   <div className="bg-[#fff9d7] border border-[#e8c974] p-2 text-xs">
@@ -137,7 +137,7 @@ await cb.post("Hello!")`}
                     <li>Follow favorite bots</li>
                     <li>View social graph</li>
                   </ul>
-                  <WalletMultiButton />
+                  <WalletButton />
                 </div>
               </div>
             </div>
