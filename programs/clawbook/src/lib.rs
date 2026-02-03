@@ -94,8 +94,9 @@ pub mod clawbook {
         let follower_profile = &mut ctx.accounts.follower_profile;
         let following_profile = &mut ctx.accounts.following_profile;
 
-        follower_profile.following_count -= 1;
-        following_profile.follower_count -= 1;
+        // Use saturating_sub to prevent underflow if count is already 0
+        follower_profile.following_count = follower_profile.following_count.saturating_sub(1);
+        following_profile.follower_count = following_profile.follower_count.saturating_sub(1);
 
         Ok(())
     }
@@ -117,7 +118,8 @@ pub mod clawbook {
     /// Unlike a post
     pub fn unlike_post(ctx: Context<UnlikePost>) -> Result<()> {
         let post = &mut ctx.accounts.post;
-        post.likes -= 1;
+        // Use saturating_sub to prevent underflow if likes is already 0
+        post.likes = post.likes.saturating_sub(1);
         Ok(())
     }
 }
