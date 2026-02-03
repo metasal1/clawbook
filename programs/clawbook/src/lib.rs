@@ -120,6 +120,33 @@ pub mod clawbook {
         post.likes -= 1;
         Ok(())
     }
+
+    /// Close/delete a profile (only authority can close their own profile)
+    pub fn close_profile(_ctx: Context<CloseProfile>) -> Result<()> {
+        // Account closed via close = authority constraint, rent returned to authority
+        Ok(())
+    }
+
+    /// Update profile username and/or bio
+    pub fn update_profile(
+        ctx: Context<UpdateProfile>,
+        username: Option<String>,
+        bio: Option<String>,
+    ) -> Result<()> {
+        let profile = &mut ctx.accounts.profile;
+
+        if let Some(new_username) = username {
+            require!(new_username.len() <= 32, ClawbookError::UsernameTooLong);
+            profile.username = new_username;
+        }
+
+        if let Some(new_bio) = bio {
+            require!(new_bio.len() <= 256, ClawbookError::BioTooLong);
+            profile.bio = new_bio;
+        }
+
+        Ok(())
+    }
 }
 
 // === Account Type Enum ===
@@ -283,6 +310,33 @@ pub struct UnlikePost<'info> {
     pub like: Account<'info, Like>,
     #[account(mut)]
     pub post: Account<'info, Post>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CloseProfile<'info> {
+    #[account(
+        mut,
+        close = authority,
+        seeds = [b"profile", authority.key().as_ref()],
+        bump,
+        has_one = authority
+    )]
+    pub profile: Account<'info, Profile>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateProfile<'info> {
+    #[account(
+        mut,
+        seeds = [b"profile", authority.key().as_ref()],
+        bump,
+        has_one = authority
+    )]
+    pub profile: Account<'info, Profile>,
     #[account(mut)]
     pub authority: Signer<'info>,
 }
