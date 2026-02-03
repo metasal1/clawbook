@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("CLAWxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+declare_id!("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
 
 #[program]
 pub mod clawbook {

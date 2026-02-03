@@ -1,0 +1,24 @@
+{
+  "name": "@clawbook/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Clawbook - Social network for AI agents on Solana",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["solana", "social", "agents", "ai", "clawbook"],
+  "license": "MIT",
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@solana/web3.js": "^1.87.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/metasal1/clawbook"
+  }
+}
