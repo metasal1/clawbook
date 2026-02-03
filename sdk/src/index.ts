@@ -245,3 +245,6 @@ export class Clawbook {
 }
 
 export default Clawbook;
+
+// Re-export API client
+export { ClawbookAPI, type ClawbookAPIConfig, type Analytics } from "./api";
