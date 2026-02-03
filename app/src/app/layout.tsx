@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/components/WalletProvider";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,6 +19,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          defer
+          src="https://stats.sal.fun/script.js"
+          data-website-id="clawbook"
+        />
+      </head>
       <body className={inter.className}>
         <WalletProvider>{children}</WalletProvider>
       </body>
