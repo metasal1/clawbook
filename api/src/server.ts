@@ -79,7 +79,7 @@ app.get("/api/health", (req, res) => {
 // Get profile (free)
 app.get("/api/profiles/:address", (req, res) => {
   const { address } = req.params;
-  // TODO: Fetch from on-chain once program deployed
+  // TODO: Fetch from onchain once program deployed
   res.json({
     address,
     profile: null,
@@ -90,7 +90,7 @@ app.get("/api/profiles/:address", (req, res) => {
 // Get posts by address (free)
 app.get("/api/posts/:address", (req, res) => {
   const { address } = req.params;
-  // TODO: Fetch from on-chain once program deployed
+  // TODO: Fetch from onchain once program deployed
   res.json({
     address,
     posts: [],
