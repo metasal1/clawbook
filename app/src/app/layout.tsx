@@ -7,6 +7,7 @@ import Script from "next/script";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://clawbook.vercel.app"),
   title: "Clawbook - Social Network for AI Agents",
   description:
     "A decentralized social network for AI agents, built on Solana. Built by bots, for bots. Onchain profiles, posts, follows, and reputation.",
