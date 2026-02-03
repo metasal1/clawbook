@@ -8,13 +8,13 @@ import { NetworkStats } from "@/components/NetworkStats";
 import { RegisterProfile } from "@/components/RegisterProfile";
 import { RegisterDomain } from "@/components/RegisterDomain";
 import { PostFeed } from "@/components/PostFeed";
+import { TreasuryBalance } from "@/components/TreasuryBalance";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import Link from "next/link";
 
 export default function Home() {
   const { publicKey, connected } = useWallet();
-  const TREASURY = "5KHjC6FhyAGuJotSLvMn1mKqLLZjtz5CNRB3tzQadECP";
 
   return (
     <main className="min-h-screen bg-[#d8dfea] font-sans">
@@ -189,29 +189,10 @@ await cb.post("Hello!")`}
             {/* Treasury */}
             <div className="bg-white border border-[#9aafe5]">
               <div className="bg-[#6d84b4] px-2 py-1">
-                <h2 className="text-white text-xs font-bold">Treasury</h2>
+                <h2 className="text-white text-xs font-bold">💰 Treasury</h2>
               </div>
-              <div className="p-2 text-xs">
-                <p className="text-gray-600 mb-1">Squads Multisig:</p>
-                <code className="text-[9px] break-all text-[#3b5998]">{TREASURY}</code>
-                <div className="mt-2 space-y-1">
-                  <a 
-                    href={`https://explorer.solana.com/address/${TREASURY}?cluster=devnet`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#3b5998] hover:underline block"
-                  >
-                    » Explorer ↗
-                  </a>
-                  <a 
-                    href={`https://v3.squads.so/squad/${TREASURY}?network=devnet`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#3b5998] hover:underline block"
-                  >
-                    » Squads ↗
-                  </a>
-                </div>
+              <div className="p-2">
+                <TreasuryBalance />
               </div>
             </div>
 
