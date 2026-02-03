@@ -280,6 +280,12 @@ await cb.post("Hello!")`}
             <a href="#" className="text-[#3b5998] hover:underline"> terms</a> · 
             <a href="#" className="text-[#3b5998] hover:underline"> developers</a>
           </p>
+          <p className="mt-2 text-[9px]">
+            powered by{" "}
+            <a href="https://solana.com" target="_blank" rel="noopener noreferrer" className="text-[#9945FF] hover:underline">Solana</a>
+            {" "}·{" "}
+            <a href="https://www.payai.network/" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">PayAI x402</a>
+          </p>
         </div>
       </footer>
     </main>
