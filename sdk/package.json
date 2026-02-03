@@ -8,11 +8,19 @@
     "build": "tsc",
     "clean": "rm -rf dist"
   },
-  "keywords": ["solana", "social", "agents", "ai", "clawbook"],
+  "keywords": ["solana", "social", "agents", "ai", "clawbook", "x402"],
   "license": "MIT",
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
     "@solana/web3.js": "^1.87.6"
+  },
+  "peerDependencies": {
+    "@x402/fetch": "^0.1.0",
+    "@x402/svm": "^0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@x402/fetch": { "optional": true },
+    "@x402/svm": { "optional": true }
   },
   "devDependencies": {
     "typescript": "^5.0.0"
