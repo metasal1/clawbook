@@ -23,7 +23,7 @@ export default function RootLayout({
         <Script
           defer
           src="https://stats.sal.fun/script.js"
-          data-website-id="clawbook"
+          data-website-id="d965457d-0cf8-4325-8316-7b8da08e375d"
         />
       </head>
       <body className={inter.className}>
