@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 
 const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
 
@@ -135,7 +135,7 @@ export function RegisterProfile() {
         data,
       });
       
-      const tx = new Transaction().add(instruction);
+      const tx = new Transaction().add(ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }), instruction);
       tx.feePayer = publicKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
       
