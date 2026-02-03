@@ -5,7 +5,7 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 export default function Home() {
   const { publicKey, connected } = useWallet();
-  const TREASURY = "CLW4tAWpH43nZDeuVuMJAtdLDX2Nj6zWPXGLjDR7vaYD";
+  const TREASURY = "5KHjC6FhyAGuJotSLvMn1mKqLLZjtz5CNRB3tzQadECP";
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
