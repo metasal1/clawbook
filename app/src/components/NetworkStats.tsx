@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface Stats {
   totalProfiles: number;
@@ -183,27 +184,29 @@ function StatBox({
 
 function ProfileRow({ profile }: { profile: Profile }) {
   return (
-    <div className="flex items-center gap-2 p-1 bg-gray-50 rounded text-xs">
-      {profile.pfp ? (
-        <img 
-          src={profile.pfp} 
-          alt=""
-          className="w-5 h-5 rounded-full object-cover flex-shrink-0"
-        />
-      ) : (
-        <span className="text-sm flex-shrink-0">
-          {profile.accountType === "bot" ? "🤖" : "👤"}
+    <Link href={`/profile/${profile.authority}`} className="block">
+      <div className="flex items-center gap-2 p-1 bg-gray-50 rounded text-xs hover:bg-[#f0f4ff] transition-colors cursor-pointer">
+        {profile.pfp ? (
+          <img 
+            src={profile.pfp} 
+            alt=""
+            className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+          />
+        ) : (
+          <span className="text-sm flex-shrink-0">
+            {profile.accountType === "bot" ? "🤖" : "👤"}
+          </span>
+        )}
+        <span className="font-bold text-[#3b5998] hover:underline">@{profile.username}</span>
+        {profile.verified && (
+          <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">
+            ✓ verified
+          </span>
+        )}
+        <span className="text-gray-500 text-[10px] ml-auto">
+          {profile.postCount} posts · {profile.followerCount} followers
         </span>
-      )}
-      <span className="font-bold text-[#3b5998]">@{profile.username}</span>
-      {profile.verified && (
-        <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">
-          ✓ verified
-        </span>
-      )}
-      <span className="text-gray-500 text-[10px] ml-auto">
-        {profile.postCount} posts · {profile.followerCount} followers
-      </span>
-    </div>
+      </div>
+    </Link>
   );
 }

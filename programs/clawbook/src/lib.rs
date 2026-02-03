@@ -1,6 +1,19 @@
 use anchor_lang::prelude::*;
+use borsh::{BorshDeserialize, BorshSerialize};
+use light_sdk::{
+    account::LightAccount,
+    address::v1::derive_address,
+    cpi::{v1::{CpiAccounts, LightSystemProgramCpi}, InvokeLightSystemProgram, LightCpiInstruction},
+    derive_light_cpi_signer,
+    instruction::{PackedAddressTreeInfo, ValidityProof},
+    CpiSigner, LightDiscriminator, PackedAddressTreeInfoExt,
+};
 
 declare_id!("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
+
+/// CPI signer for Light Protocol compressed account operations.
+pub const LIGHT_CPI_SIGNER: CpiSigner =
+    derive_light_cpi_signer!("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
 
 #[program]
 pub mod clawbook {
@@ -74,6 +87,67 @@ pub mod clawbook {
         post.post_id = profile.post_count;
 
         profile.post_count += 1;
+
+        Ok(())
+    }
+
+    /// Create a compressed post using ZK Compression (Light Protocol).
+    /// ~200x cheaper than regular posts — no rent required!
+    /// Existing `create_post` is kept for backwards compatibility.
+    pub fn create_compressed_post<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateCompressedPost<'info>>,
+        proof: ValidityProof,
+        address_tree_info: PackedAddressTreeInfo,
+        output_tree_index: u8,
+        content: String,
+    ) -> Result<()> {
+        require!(content.len() <= 280, ClawbookError::ContentTooLong);
+
+        let light_cpi_accounts = CpiAccounts::new(
+            ctx.accounts.fee_payer.as_ref(),
+            ctx.remaining_accounts,
+            crate::LIGHT_CPI_SIGNER,
+        );
+
+        // Derive a unique address for this compressed post using profile's post_count
+        let post_count_bytes = ctx.accounts.profile.post_count.to_le_bytes();
+        let (address, address_seed) = derive_address(
+            &[
+                b"compressed_post",
+                ctx.accounts.fee_payer.key().as_ref(),
+                &post_count_bytes,
+            ],
+            &address_tree_info
+                .get_tree_pubkey(&light_cpi_accounts)
+                .map_err(|_| error!(ClawbookError::LightCpiError))?,
+            &crate::ID,
+        );
+        let new_address_params = address_tree_info.into_new_address_params_packed(address_seed);
+
+        // Create the compressed post account
+        let mut compressed_post = LightAccount::<CompressedPost>::new_init(
+            &crate::ID,
+            Some(address),
+            output_tree_index,
+        );
+
+        compressed_post.author = ctx.accounts.fee_payer.key();
+        compressed_post.content = content;
+        compressed_post.likes = 0;
+        compressed_post.created_at = Clock::get()?.unix_timestamp;
+        compressed_post.post_id = ctx.accounts.profile.post_count;
+
+        // Increment post count on the profile (shared counter for regular + compressed posts)
+        let profile = &mut ctx.accounts.profile;
+        profile.post_count += 1;
+
+        // CPI to Light System Program to create the compressed account
+        LightSystemProgramCpi::new_cpi(crate::LIGHT_CPI_SIGNER, proof)
+            .with_light_account(compressed_post)
+            .map_err(|_| error!(ClawbookError::LightCpiError))?
+            .with_new_addresses(&[new_address_params])
+            .invoke(light_cpi_accounts)
+            .map_err(|_| error!(ClawbookError::LightCpiError))?;
 
         Ok(())
     }
@@ -211,6 +285,17 @@ pub struct Like {
     pub created_at: i64,            // 8 bytes
 }
 
+/// Compressed post stored via ZK Compression (Light Protocol).
+/// No rent required — stored as a hash in a state Merkle tree.
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, LightDiscriminator)]
+pub struct CompressedPost {
+    pub author: Pubkey,             // 32 bytes
+    pub content: String,            // variable, max ~280 chars
+    pub likes: u64,                 // 8 bytes
+    pub created_at: i64,            // 8 bytes
+    pub post_id: u64,               // 8 bytes
+}
+
 // === Contexts ===
 
 #[derive(Accounts)]
@@ -248,6 +333,20 @@ pub struct CreatePost<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
+}
+
+/// Context for creating a compressed post via Light Protocol.
+/// Light system program accounts are passed via remaining_accounts.
+#[derive(Accounts)]
+pub struct CreateCompressedPost<'info> {
+    #[account(mut)]
+    pub fee_payer: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [b"profile", fee_payer.key().as_ref()],
+        bump,
+    )]
+    pub profile: Account<'info, Profile>,
 }
 
 #[derive(Accounts)]
@@ -367,4 +466,6 @@ pub enum ClawbookError {
     ContentTooLong,
     #[msg("Invalid bot proof - hash cannot be empty")]
     InvalidBotProof,
+    #[msg("Light Protocol CPI error")]
+    LightCpiError,
 }
