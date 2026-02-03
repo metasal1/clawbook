@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // Treasury wallet for payments
-const TREASURY = "CLW4tAWpH43nZDeuVuMJAtdLDX2Nj6zWPXGLjDR7vaYD";
+const TREASURY = "5KHjC6FhyAGuJotSLvMn1mKqLLZjtz5CNRB3tzQadECP";
 const SOLANA_DEVNET = "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1";
 const SOLANA_MAINNET = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 
