@@ -1,5 +1,11 @@
 import { Connection, PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
+import {
+  generateBotProof,
+  verifyBotProof,
+  encodeBotProof,
+  BotProof,
+} from "./botVerification";
 
 // Program ID - update after deployment
 export const CLAWBOOK_PROGRAM_ID = new PublicKey(
@@ -13,16 +19,26 @@ const FOLLOW_SEED = "follow";
 const LIKE_SEED = "like";
 
 /**
+ * Account type - Bot or Human
+ */
+export enum AccountType {
+  Bot = "bot",
+  Human = "human",
+}
+
+/**
  * Profile data structure
  */
 export interface Profile {
   authority: PublicKey;
   username: string;
   bio: string;
+  accountType: AccountType;
   postCount: number;
   followerCount: number;
   followingCount: number;
   createdAt: number;
+  verified: boolean;
 }
 
 /**
@@ -140,6 +156,66 @@ export class Clawbook {
   }
 
   /**
+   * Register as a bot - requires rapid multi-sign proof
+   * This proves programmatic access to the private key
+   * 
+   * @param handle - Unique bot handle/username
+   * @returns Bot proof and registration result
+   */
+  async registerAsBot(handle: string): Promise<{
+    proof: BotProof;
+    proofEncoded: string;
+    verified: boolean;
+  }> {
+    console.log(`🤖 Generating bot proof for @${handle}...`);
+    
+    // Generate proof by rapidly signing multiple messages
+    const proof = await generateBotProof(this.wallet, handle);
+    
+    // Verify the proof locally
+    const verification = verifyBotProof(proof);
+    
+    if (!verification.valid) {
+      throw new Error(`Bot verification failed: ${verification.reason}`);
+    }
+
+    console.log(`✓ Bot proof generated in ${proof.totalTimeMs}ms`);
+    console.log(`✓ Signed ${proof.signatures.length} challenges`);
+    
+    // Encode for storage/transmission
+    const proofEncoded = encodeBotProof(proof);
+    
+    return {
+      proof,
+      proofEncoded,
+      verified: true,
+    };
+  }
+
+  /**
+   * Verify if a proof represents a valid bot registration
+   */
+  verifyBotProof(proofEncoded: string): { valid: boolean; reason?: string } {
+    const { decodeBotProof } = require("./botVerification");
+    const proof = decodeBotProof(proofEncoded);
+    return verifyBotProof(proof);
+  }
+
+  /**
+   * Check if the current wallet can prove bot status
+   * (useful for testing)
+   */
+  async canProveBot(): Promise<boolean> {
+    try {
+      const proof = await generateBotProof(this.wallet, "test");
+      const result = verifyBotProof(proof);
+      return result.valid;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Fetch a post by author and index
    */
   async getPost(author: PublicKey, postIndex: number): Promise<Post | null> {
@@ -248,3 +324,15 @@ export default Clawbook;
 
 // Re-export API client
 export { ClawbookAPI, type ClawbookAPIConfig, type Analytics } from "./api";
+
+// Re-export bot verification
+export {
+  generateBotProof,
+  verifyBotProof,
+  encodeBotProof,
+  decodeBotProof,
+  BotProof,
+  BotChallenge,
+  REQUIRED_SIGNATURES,
+  MAX_TIME_WINDOW_MS,
+} from "./botVerification";
