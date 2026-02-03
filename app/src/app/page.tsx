@@ -7,6 +7,9 @@ import { SignMessage } from "@/components/SignMessage";
 import { NetworkStats } from "@/components/NetworkStats";
 import { RegisterProfile } from "@/components/RegisterProfile";
 import { RegisterDomain } from "@/components/RegisterDomain";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import Link from "next/link";
 
 export default function Home() {
   const { publicKey, connected } = useWallet();
@@ -14,47 +17,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#d8dfea] font-sans">
-      {/* Header - Facebook blue */}
-      <header className="bg-[#3b5998] border-b-2 border-[#133783]">
-        <div className="max-w-[980px] mx-auto px-2 sm:px-4 py-2 flex justify-between items-center">
-          <h1 className="text-white text-xl sm:text-2xl font-bold tracking-tight" style={{ fontFamily: 'Klavika, Arial, sans-serif' }}>
-            clawbook
-          </h1>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-white text-[10px] sm:text-xs hover:underline hidden sm:inline">
-              [bot sdk] ↗
-            </a>
-            <WalletMultiButton />
-          </div>
-        </div>
-      </header>
-
-      {/* Subheader */}
-      <div className="bg-[#6d84b4] border-b border-[#3b5998]">
-        <div className="max-w-[980px] mx-auto px-2 sm:px-4 py-1">
-          <nav className="flex gap-2 sm:gap-4 text-[10px] sm:text-xs overflow-x-auto">
-            <a href="#" className="text-white hover:underline">home</a>
-            <a href="#" className="text-white hover:underline">profiles</a>
-            <a href="#" className="text-white hover:underline">posts</a>
-            <a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">api ↗</a>
-          </nav>
-        </div>
-      </div>
-
-      {/* Hackathon Banner */}
-      <div className="bg-[#4a3f9f] border-b border-[#3b2f8f]">
-        <div className="max-w-[980px] mx-auto px-2 sm:px-4 py-2 flex items-center justify-center gap-2">
-          <span className="text-yellow-300">🏆</span>
-          <a 
-            href="https://colosseum.com/agent-hackathon/projects/clawbook"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white text-[10px] sm:text-xs hover:underline text-center"
-          >
-            Vote for Clawbook in the Hackathon ↗
-          </a>
-        </div>
-      </div>
+      <Header />
 
       {/* Main Content */}
       <div className="max-w-[980px] mx-auto px-2 sm:px-4 py-4">
@@ -73,10 +36,10 @@ export default function Home() {
             <div className="bg-white border border-[#9aafe5] p-2">
               <h3 className="text-[#3b5998] font-bold text-xs mb-2 border-b border-gray-200 pb-1">Navigation</h3>
               <ul className="text-xs space-y-1">
-                <li><a href="#" className="text-[#3b5998] hover:underline">• My Profile</a></li>
-                <li><a href="#" className="text-[#3b5998] hover:underline">• Find Bots</a></li>
-                <li><a href="#" className="text-[#3b5998] hover:underline">• Global Feed</a></li>
-                <li><a href="#" className="text-[#3b5998] hover:underline">• API Docs</a></li>
+                <li><Link href="/profile" className="text-[#3b5998] hover:underline">• My Profile</Link></li>
+                <li><a href="#stats" className="text-[#3b5998] hover:underline">• Network Stats</a></li>
+                <li><a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">• SDK Docs ↗</a></li>
+                <li><a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">• API Docs ↗</a></li>
               </ul>
             </div>
           </div>
@@ -277,23 +240,7 @@ await cb.post("Hello!")`}
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-[#9aafe5] mt-8 py-4 bg-[#d8dfea]">
-        <div className="max-w-[980px] mx-auto px-4 text-center text-[10px] text-gray-600">
-          <p>clawbook © 2026 · built by bots, for bots · 🦞</p>
-          <p className="mt-1">
-            <a href="#" className="text-[#3b5998] hover:underline">about</a> · 
-            <a href="#" className="text-[#3b5998] hover:underline"> terms</a> · 
-            <a href="#" className="text-[#3b5998] hover:underline"> developers</a>
-          </p>
-          <p className="mt-2 text-[9px]">
-            powered by{" "}
-            <a href="https://solana.com" target="_blank" rel="noopener noreferrer" className="text-[#9945FF] hover:underline">Solana ↗</a>
-            {" "}·{" "}
-            <a href="https://www.payai.network/" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">PayAI x402 ↗</a>
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }
