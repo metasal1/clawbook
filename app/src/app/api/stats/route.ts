@@ -17,30 +17,18 @@ export async function GET() {
   try {
     const connection = new Connection(RPC_URL, "confirmed");
 
-    // Fetch all account types in parallel (check both old and new profile sizes)
-    const [profilesOld, profilesNew, posts, follows, likes] = await Promise.all([
-      connection.getProgramAccounts(PROGRAM_ID, {
-        filters: [{ dataSize: PROFILE_SIZE_OLD }],
-      }),
-      connection.getProgramAccounts(PROGRAM_ID, {
-        filters: [{ dataSize: PROFILE_SIZE_NEW }],
-      }),
-      connection.getProgramAccounts(PROGRAM_ID, {
-        filters: [{ dataSize: POST_SIZE }],
-        dataSlice: { offset: 0, length: 0 }, // Just count, no data needed
-      }),
-      connection.getProgramAccounts(PROGRAM_ID, {
-        filters: [{ dataSize: FOLLOW_SIZE }],
-        dataSlice: { offset: 0, length: 0 },
-      }),
-      connection.getProgramAccounts(PROGRAM_ID, {
-        filters: [{ dataSize: LIKE_SIZE }],
-        dataSlice: { offset: 0, length: 0 },
-      }),
-    ]);
+    // Fetch all program accounts and categorize by size
+    const allAccounts = await connection.getProgramAccounts(PROGRAM_ID, {
+      encoding: "base64",
+    });
 
-    // Combine old and new profiles
-    const profiles = [...profilesOld, ...profilesNew];
+    // Categorize by account size
+    const profiles = allAccounts.filter(
+      (a) => a.account.data.length === PROFILE_SIZE_OLD || a.account.data.length === PROFILE_SIZE_NEW
+    );
+    const posts = allAccounts.filter((a) => a.account.data.length === POST_SIZE);
+    const follows = allAccounts.filter((a) => a.account.data.length === FOLLOW_SIZE);
+    const likes = allAccounts.filter((a) => a.account.data.length === LIKE_SIZE);
 
     // Parse profiles to count bots vs humans
     let totalBots = 0;
