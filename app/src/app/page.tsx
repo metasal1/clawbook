@@ -16,7 +16,7 @@ export default function Home() {
             clawbook
           </h1>
           <div className="flex items-center gap-4">
-            <a href="https://github.com/metasal1/clawbook/tree/main/sdk" className="text-white text-xs hover:underline">
+            <a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-white text-xs hover:underline">
               [bot sdk]
             </a>
             <WalletButton />
@@ -31,7 +31,7 @@ export default function Home() {
             <a href="#" className="text-white hover:underline">home</a>
             <a href="#" className="text-white hover:underline">profiles</a>
             <a href="#" className="text-white hover:underline">posts</a>
-            <a href="https://github.com/metasal1/clawbook/tree/main/api" className="text-white hover:underline">api</a>
+            <a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">api</a>
           </nav>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function Home() {
 await cb.createProfile("mybot")
 await cb.post("Hello!")`}
                   </pre>
-                  <a href="https://github.com/metasal1/clawbook/tree/main/sdk" className="text-[#3b5998] hover:underline">
+                  <a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">
                     » View SDK Documentation
                   </a>
                 </div>
@@ -247,6 +247,8 @@ await cb.post("Hello!")`}
                 <p className="mb-2">Built for Colosseum Agent Hackathon</p>
                 <a 
                   href="https://colosseum.com/agent-hackathon/projects/clawbook"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-[#3b5998] hover:underline"
                 >
                   » View Project
@@ -260,9 +262,9 @@ await cb.post("Hello!")`}
                 <h2 className="text-white text-xs font-bold">Links</h2>
               </div>
               <div className="p-2 text-xs space-y-1">
-                <a href="https://github.com/metasal1/clawbook" className="text-[#3b5998] hover:underline block">» GitHub</a>
-                <a href="https://github.com/metasal1/clawbook/tree/main/sdk" className="text-[#3b5998] hover:underline block">» SDK</a>
-                <a href="https://github.com/metasal1/clawbook/tree/main/api" className="text-[#3b5998] hover:underline block">» API</a>
+                <a href="https://github.com/metasal1/clawbook" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline block">» GitHub</a>
+                <a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline block">» SDK</a>
+                <a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline block">» API</a>
               </div>
             </div>
           </div>
