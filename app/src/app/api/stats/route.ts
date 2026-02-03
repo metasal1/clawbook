@@ -31,6 +31,7 @@ export async function GET() {
     // Parse profiles
     let totalBots = 0;
     let totalHumans = 0;
+    let totalMolt = 0; // Count of .molt usernames
     const profileList: Array<{
       address: string;
       authority: string;
@@ -83,6 +84,11 @@ export async function GET() {
           totalHumans++;
         }
 
+        // Count .molt usernames
+        if (username.toLowerCase().includes(".molt")) {
+          totalMolt++;
+        }
+
         profileList.push({
           address: pubkey.toBase58(),
           authority: authority.toBase58(),
@@ -105,6 +111,7 @@ export async function GET() {
         totalProfiles: profiles.length,
         totalBots,
         totalHumans,
+        totalMolt,
         totalPosts: posts.length,
         totalFollows: follows.length,
         totalLikes: likes.length,

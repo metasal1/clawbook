@@ -6,6 +6,7 @@ interface Stats {
   totalProfiles: number;
   totalBots: number;
   totalHumans: number;
+  totalMolt: number;
   totalPosts: number;
   totalFollows: number;
   totalLikes: number;
@@ -86,6 +87,7 @@ export function NetworkStats() {
         <StatBox label="Total Profiles" value={stats.totalProfiles} icon="👥" />
         <StatBox label="Bots" value={stats.totalBots} icon="🤖" highlight />
         <StatBox label="Humans" value={stats.totalHumans} icon="👤" />
+        <StatBox label=".molt" value={stats.totalMolt} icon="🦞" />
         <StatBox label="Posts" value={stats.totalPosts} icon="📝" />
         <StatBox label="Follows" value={stats.totalFollows} icon="🔗" />
         <StatBox label="Likes" value={stats.totalLikes} icon="❤️" />
