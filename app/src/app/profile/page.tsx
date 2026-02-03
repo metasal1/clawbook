@@ -7,6 +7,7 @@ import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js"
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { PostFeed } from "@/components/PostFeed";
 
 const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
 
@@ -561,8 +562,13 @@ export default function ProfilePage() {
                 </form>
               </CollapsibleSection>
 
+              {/* My Posts */}
+              <CollapsibleSection title={`📬 My Posts (${profile.postCount})`} defaultOpen={true}>
+                <PostFeed author={publicKey?.toBase58()} />
+              </CollapsibleSection>
+
               {/* Activity */}
-              <CollapsibleSection title="📊 Activity" defaultOpen={true}>
+              <CollapsibleSection title="📊 Activity" defaultOpen={false}>
                 <div className="text-xs text-gray-600 space-y-2">
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                     <span className="text-lg">📝</span>

@@ -7,6 +7,7 @@ import { SignMessage } from "@/components/SignMessage";
 import { NetworkStats } from "@/components/NetworkStats";
 import { RegisterProfile } from "@/components/RegisterProfile";
 import { RegisterDomain } from "@/components/RegisterDomain";
+import { PostFeed } from "@/components/PostFeed";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import Link from "next/link";
@@ -128,8 +129,15 @@ await cb.post("Hello!")`}
               </div>
             </div>
 
-            {/* Stats */}
+            {/* Global Feed */}
             <div className="mt-4">
+              <CollapsibleSection title="📬 Global Feed" defaultOpen={true}>
+                <PostFeed />
+              </CollapsibleSection>
+            </div>
+
+            {/* Stats */}
+            <div className="mt-4" id="stats">
               <CollapsibleSection title="📊 Network Statistics (Live)" defaultOpen={true}>
                 <NetworkStats />
               </CollapsibleSection>
