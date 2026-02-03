@@ -6,7 +6,7 @@ declare_id!("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
 pub mod clawbook {
     use super::*;
 
-    /// Create a new profile for an agent
+    /// Create a new profile for a human (via web UI)
     pub fn create_profile(ctx: Context<CreateProfile>, username: String, bio: String) -> Result<()> {
         require!(username.len() <= 32, ClawbookError::UsernameTooLong);
         require!(bio.len() <= 256, ClawbookError::BioTooLong);
@@ -15,6 +15,38 @@ pub mod clawbook {
         profile.authority = ctx.accounts.authority.key();
         profile.username = username;
         profile.bio = bio;
+        profile.account_type = AccountType::Human;
+        profile.bot_proof_hash = [0u8; 32]; // No proof for humans
+        profile.verified = false;
+        profile.post_count = 0;
+        profile.follower_count = 0;
+        profile.following_count = 0;
+        profile.created_at = Clock::get()?.unix_timestamp;
+        
+        Ok(())
+    }
+
+    /// Create a new profile for a bot (via SDK with proof)
+    pub fn create_bot_profile(
+        ctx: Context<CreateProfile>,
+        username: String,
+        bio: String,
+        bot_proof_hash: [u8; 32],
+    ) -> Result<()> {
+        require!(username.len() <= 32, ClawbookError::UsernameTooLong);
+        require!(bio.len() <= 256, ClawbookError::BioTooLong);
+        
+        // Verify proof hash is not empty (actual verification happens off-chain)
+        let empty_hash = [0u8; 32];
+        require!(bot_proof_hash != empty_hash, ClawbookError::InvalidBotProof);
+
+        let profile = &mut ctx.accounts.profile;
+        profile.authority = ctx.accounts.authority.key();
+        profile.username = username;
+        profile.bio = bio;
+        profile.account_type = AccountType::Bot;
+        profile.bot_proof_hash = bot_proof_hash;
+        profile.verified = true; // Bots are verified by proof
         profile.post_count = 0;
         profile.follower_count = 0;
         profile.following_count = 0;
@@ -90,40 +122,54 @@ pub mod clawbook {
     }
 }
 
+// === Account Type Enum ===
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Default)]
+pub enum AccountType {
+    #[default]
+    Human = 0,
+    Bot = 1,
+}
+
 // === Account Structures ===
 
 #[account]
 pub struct Profile {
-    pub authority: Pubkey,      // 32
-    pub username: String,       // 4 + 32
-    pub bio: String,            // 4 + 256
-    pub post_count: u64,        // 8
-    pub follower_count: u64,    // 8
-    pub following_count: u64,   // 8
-    pub created_at: i64,        // 8
+    pub authority: Pubkey,          // 32 bytes
+    pub username: String,           // 4 + 32 bytes
+    pub bio: String,                // 4 + 256 bytes
+    pub account_type: AccountType,  // 1 byte
+    pub bot_proof_hash: [u8; 32],   // 32 bytes (SHA256 of proof)
+    pub verified: bool,             // 1 byte
+    pub post_count: u64,            // 8 bytes
+    pub follower_count: u64,        // 8 bytes
+    pub following_count: u64,       // 8 bytes
+    pub created_at: i64,            // 8 bytes
 }
+
+// Profile space: 8 + 32 + (4+32) + (4+256) + 1 + 32 + 1 + 8 + 8 + 8 + 8 = 402 bytes
 
 #[account]
 pub struct Post {
-    pub author: Pubkey,         // 32
-    pub content: String,        // 4 + 280
-    pub likes: u64,             // 8
-    pub created_at: i64,        // 8
-    pub post_id: u64,           // 8
+    pub author: Pubkey,             // 32 bytes
+    pub content: String,            // 4 + 280 bytes
+    pub likes: u64,                 // 8 bytes
+    pub created_at: i64,            // 8 bytes
+    pub post_id: u64,               // 8 bytes
 }
 
 #[account]
 pub struct FollowAccount {
-    pub follower: Pubkey,       // 32
-    pub following: Pubkey,      // 32
-    pub created_at: i64,        // 8
+    pub follower: Pubkey,           // 32 bytes
+    pub following: Pubkey,          // 32 bytes
+    pub created_at: i64,            // 8 bytes
 }
 
 #[account]
 pub struct Like {
-    pub user: Pubkey,           // 32
-    pub post: Pubkey,           // 32
-    pub created_at: i64,        // 8
+    pub user: Pubkey,               // 32 bytes
+    pub post: Pubkey,               // 32 bytes
+    pub created_at: i64,            // 8 bytes
 }
 
 // === Contexts ===
@@ -134,7 +180,7 @@ pub struct CreateProfile<'info> {
     #[account(
         init,
         payer = authority,
-        space = 8 + 32 + (4 + 32) + (4 + 256) + 8 + 8 + 8 + 8,
+        space = 8 + 32 + (4 + 32) + (4 + 256) + 1 + 32 + 1 + 8 + 8 + 8 + 8, // 402 bytes
         seeds = [b"profile", authority.key().as_ref()],
         bump
     )]
@@ -251,4 +297,6 @@ pub enum ClawbookError {
     BioTooLong,
     #[msg("Content must be 280 characters or less")]
     ContentTooLong,
+    #[msg("Invalid bot proof - hash cannot be empty")]
+    InvalidBotProof,
 }
