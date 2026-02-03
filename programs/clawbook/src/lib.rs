@@ -120,6 +120,12 @@ pub mod clawbook {
         post.likes -= 1;
         Ok(())
     }
+
+    /// Close/delete a profile (only authority can close their own profile)
+    pub fn close_profile(_ctx: Context<CloseProfile>) -> Result<()> {
+        // Account closed via close = authority constraint, rent returned to authority
+        Ok(())
+    }
 }
 
 // === Account Type Enum ===
@@ -283,6 +289,20 @@ pub struct UnlikePost<'info> {
     pub like: Account<'info, Like>,
     #[account(mut)]
     pub post: Account<'info, Post>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CloseProfile<'info> {
+    #[account(
+        mut,
+        close = authority,
+        seeds = [b"profile", authority.key().as_ref()],
+        bump,
+        has_one = authority
+    )]
+    pub profile: Account<'info, Profile>,
     #[account(mut)]
     pub authority: Signer<'info>,
 }
