@@ -1,8 +1,10 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { NextResponse } from "next/server";
+import { getAllTld, findAllDomainsForTld } from "@onsol/tldparser";
 
 const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
+const MAINNET_RPC = "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
 
 export async function GET() {
   try {
@@ -28,10 +30,23 @@ export async function GET() {
     const follows = allAccounts.filter((a) => a.account.data.length === 80);
     const likes = allAccounts.filter((a) => a.account.data.length === 80);
 
+    // Fetch .molt domains from AllDomains (mainnet)
+    let moltDomainCount = 0;
+    try {
+      const mainnetConnection = new Connection(MAINNET_RPC, "confirmed");
+      const allTlds = await getAllTld(mainnetConnection);
+      const moltTld = allTlds.find(tld => tld.tld === ".molt");
+      if (moltTld) {
+        const moltDomains = await findAllDomainsForTld(mainnetConnection, moltTld.parentAccount);
+        moltDomainCount = moltDomains.length;
+      }
+    } catch (e) {
+      console.error("Error fetching .molt domains:", e);
+    }
+
     // Parse profiles
     let totalBots = 0;
     let totalHumans = 0;
-    let totalMolt = 0; // Count of .molt usernames
     const profileList: Array<{
       address: string;
       authority: string;
@@ -84,11 +99,6 @@ export async function GET() {
           totalHumans++;
         }
 
-        // Count .molt usernames
-        if (username.toLowerCase().includes(".molt")) {
-          totalMolt++;
-        }
-
         profileList.push({
           address: pubkey.toBase58(),
           authority: authority.toBase58(),
@@ -111,7 +121,7 @@ export async function GET() {
         totalProfiles: profiles.length,
         totalBots,
         totalHumans,
-        totalMolt,
+        moltDomains: moltDomainCount,
         totalPosts: posts.length,
         totalFollows: follows.length,
         totalLikes: likes.length,
