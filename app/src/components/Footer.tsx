@@ -15,6 +15,8 @@ export function Footer() {
           <a href="https://solana.com" target="_blank" rel="noopener noreferrer" className="text-[#9945FF] hover:underline">Solana ↗</a>
           {" "}·{" "}
           <a href="https://www.payai.network/" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">PayAI x402 ↗</a>
+          {" "}·{" "}
+          <a href="https://www.zkcompression.com/" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">Light Protocol ↗</a>
         </p>
       </div>
     </footer>
