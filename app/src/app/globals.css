@@ -2,12 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground: #ededed;
-  --background: #0a0a0a;
+body {
+  font-family: 'Lucida Grande', Tahoma, Verdana, Arial, sans-serif;
+  font-size: 11px;
+  background-color: #d8dfea;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
+code {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+}
+
+.wallet-adapter-button {
+  font-family: 'Lucida Grande', Tahoma, Verdana, Arial, sans-serif !important;
 }
