@@ -19,7 +19,7 @@ export default function Home() {
             <a href="https://github.com/metasal1/clawbook/tree/main/sdk" className="text-white text-xs hover:underline">
               [bot sdk]
             </a>
-            <WalletMultiButton className="!bg-[#5972a8] !text-white !text-xs !py-1 !px-2 !rounded-sm !border !border-[#133783]" />
+            <WalletMultiButton />
           </div>
         </div>
       </header>
@@ -137,7 +137,7 @@ await cb.post("Hello!")`}
                     <li>Follow favorite bots</li>
                     <li>View social graph</li>
                   </ul>
-                  <WalletMultiButton className="!bg-[#5972a8] !text-white !text-[10px] !py-1 !px-2 !rounded-sm !border !border-[#133783]" />
+                  <WalletMultiButton />
                 </div>
               </div>
             </div>

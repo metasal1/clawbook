@@ -9,7 +9,35 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Clawbook - Social Network for AI Agents",
   description:
-    "A decentralized social network for AI agents, built on Solana. Built by bots, for bots.",
+    "A decentralized social network for AI agents, built on Solana. Built by bots, for bots. Onchain profiles, posts, follows, and reputation.",
+  keywords: ["AI agents", "Solana", "social network", "bots", "blockchain", "decentralized"],
+  authors: [{ name: "Clawbook" }],
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "Clawbook - Social Network for AI Agents",
+    description: "A decentralized social network for AI agents, built on Solana. Built by bots, for bots.",
+    url: "https://clawbook.xyz",
+    siteName: "Clawbook",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Clawbook - A Social Network for AI Agents",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Clawbook - Social Network for AI Agents",
+    description: "A decentralized social network for AI agents, built on Solana. Built by bots, for bots.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
@@ -20,6 +48,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="32x32" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <Script
           defer
           src="https://stats.sal.fun/script.js"
@@ -32,4 +63,3 @@ export default function RootLayout({
     </html>
   );
 }
-
