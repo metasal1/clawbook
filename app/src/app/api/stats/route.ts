@@ -20,9 +20,9 @@ export async function GET() {
       accountSizes: allAccounts.map(a => a.account.data.length),
     };
 
-    // Profile sizes: old=368, new=402
+    // Profile sizes: old=368, v2=402, v3=534 (with pfp)
     const profiles = allAccounts.filter(
-      (a) => a.account.data.length === 368 || a.account.data.length === 402
+      (a) => a.account.data.length === 368 || a.account.data.length === 402 || a.account.data.length === 534
     );
     
     // Other account sizes
@@ -51,6 +51,7 @@ export async function GET() {
       address: string;
       authority: string;
       username: string;
+      pfp: string;
       accountType: "bot" | "human";
       verified: boolean;
       postCount: number;
@@ -61,7 +62,9 @@ export async function GET() {
     for (const { pubkey, account } of profiles) {
       try {
         const data = account.data;
-        const isNewFormat = data.length >= 402;
+        const isV2 = data.length === 402; // v2: with account_type, bot_proof, verified
+        const isV3 = data.length === 534; // v3: v2 + pfp
+        const hasExtendedFields = isV2 || isV3;
         let offset = 8; // Skip discriminator
 
         const authority = new PublicKey(data.subarray(offset, offset + 32));
@@ -76,10 +79,18 @@ export async function GET() {
         offset += 4;
         offset += bioLen; // Skip bio content
 
+        let pfp = "";
+        if (isV3) {
+          const pfpLen = data.readUInt32LE(offset);
+          offset += 4;
+          pfp = data.subarray(offset, offset + pfpLen).toString("utf-8");
+          offset += pfpLen;
+        }
+
         let accountType: "bot" | "human" = "human";
         let verified = false;
 
-        if (isNewFormat) {
+        if (hasExtendedFields) {
           accountType = data[offset] === 1 ? "bot" : "human";
           offset += 1;
           offset += 32; // Skip bot_proof_hash
@@ -103,6 +114,7 @@ export async function GET() {
           address: pubkey.toBase58(),
           authority: authority.toBase58(),
           username,
+          pfp,
           accountType,
           verified,
           postCount,

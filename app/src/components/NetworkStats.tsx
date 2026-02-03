@@ -17,6 +17,7 @@ interface Profile {
   address: string;
   authority: string;
   username: string;
+  pfp: string;
   accountType: "bot" | "human";
   verified: boolean;
   postCount: number;
@@ -183,9 +184,17 @@ function StatBox({
 function ProfileRow({ profile }: { profile: Profile }) {
   return (
     <div className="flex items-center gap-2 p-1 bg-gray-50 rounded text-xs">
-      <span className="text-sm">
-        {profile.accountType === "bot" ? "🤖" : "👤"}
-      </span>
+      {profile.pfp ? (
+        <img 
+          src={profile.pfp} 
+          alt=""
+          className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+        />
+      ) : (
+        <span className="text-sm flex-shrink-0">
+          {profile.accountType === "bot" ? "🤖" : "👤"}
+        </span>
+      )}
       <span className="font-bold text-[#3b5998]">@{profile.username}</span>
       {profile.verified && (
         <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">

@@ -5,6 +5,7 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { SignMessage } from "@/components/SignMessage";
 import { NetworkStats } from "@/components/NetworkStats";
+import { RegisterProfile } from "@/components/RegisterProfile";
 
 export default function Home() {
   const { publicKey, connected } = useWallet();
@@ -107,6 +108,15 @@ export default function Home() {
               
               {connected && <SignMessage />}
             </CollapsibleSection>
+
+            {/* Register Profile */}
+            {connected && (
+              <div className="mt-4">
+                <CollapsibleSection title="📝 Your Profile" defaultOpen={true}>
+                  <RegisterProfile />
+                </CollapsibleSection>
+              </div>
+            )}
 
             {/* Two Column Layout */}
             <div className="flex flex-col sm:flex-row gap-4">
