@@ -279,17 +279,17 @@ export default function ProfilePage() {
         PROGRAM_ID
       );
 
-      const postId = BigInt(profile.postCount);
-      const [postPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("post"), publicKey.toBuffer(), Buffer.from(postId.toString(16).padStart(16, '0'), 'hex').reverse()],
-        PROGRAM_ID
-      );
+      // Encode post_id as little-endian u64 bytes (browser-safe, no BigInt)
+      const postId = profile.postCount;
+      const postIdBuf = new Uint8Array(8);
+      let val = postId;
+      for (let i = 0; i < 8; i++) {
+        postIdBuf[i] = val & 0xff;
+        val = Math.floor(val / 256);
+      }
 
-      // Properly encode post_id as little-endian u64
-      const postIdBuf = Buffer.alloc(8);
-      postIdBuf.writeBigUInt64LE(postId);
-      const [postPda2] = PublicKey.findProgramAddressSync(
-        [Buffer.from("post"), publicKey.toBuffer(), postIdBuf],
+      const [postPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("post"), publicKey.toBuffer(), Buffer.from(postIdBuf)],
         PROGRAM_ID
       );
 
@@ -302,7 +302,7 @@ export default function ProfilePage() {
 
       const ix = new TransactionInstruction({
         keys: [
-          { pubkey: postPda2, isSigner: false, isWritable: true },
+          { pubkey: postPda, isSigner: false, isWritable: true },
           { pubkey: profilePda, isSigner: false, isWritable: true },
           { pubkey: publicKey, isSigner: true, isWritable: true },
           { pubkey: new PublicKey("11111111111111111111111111111111"), isSigner: false, isWritable: false },
