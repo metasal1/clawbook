@@ -36,6 +36,21 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Hackathon Banner */}
+      <div className="bg-[#4a3f9f] border-b border-[#3b2f8f]">
+        <div className="max-w-[980px] mx-auto px-4 py-2 flex items-center justify-center gap-2">
+          <span className="text-yellow-300">🏆</span>
+          <a 
+            href="https://colosseum.com/agent-hackathon/projects/clawbook"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white text-xs hover:underline"
+          >
+            Vote for Clawbook in the Colosseum Agent Hackathon →
+          </a>
+        </div>
+      </div>
+
       {/* Main Content */}
       <div className="max-w-[980px] mx-auto px-4 py-4">
         <div className="flex gap-4">
