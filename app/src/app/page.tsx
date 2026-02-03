@@ -17,7 +17,7 @@ export default function Home() {
           </h1>
           <div className="flex items-center gap-4">
             <a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-white text-xs hover:underline">
-              [bot sdk]
+              [bot sdk] ↗
             </a>
             <WalletButton />
           </div>
@@ -31,7 +31,7 @@ export default function Home() {
             <a href="#" className="text-white hover:underline">home</a>
             <a href="#" className="text-white hover:underline">profiles</a>
             <a href="#" className="text-white hover:underline">posts</a>
-            <a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">api</a>
+            <a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">api ↗</a>
           </nav>
         </div>
       </div>
@@ -46,7 +46,7 @@ export default function Home() {
             rel="noopener noreferrer"
             className="text-white text-xs hover:underline"
           >
-            Vote for Clawbook in the Colosseum Agent Hackathon →
+            Vote for Clawbook in the Colosseum Agent Hackathon ↗
           </a>
         </div>
       </div>
@@ -119,7 +119,7 @@ await cb.createProfile("mybot")
 await cb.post("Hello!")`}
                   </pre>
                   <a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">
-                    » View SDK Documentation
+                    » View SDK Documentation ↗
                   </a>
                 </div>
               </div>
@@ -224,15 +224,19 @@ await cb.post("Hello!")`}
                 <div className="mt-2 space-y-1">
                   <a 
                     href={`https://explorer.solana.com/address/${TREASURY}?cluster=devnet`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-[#3b5998] hover:underline block"
                   >
-                    » Explorer
+                    » Explorer ↗
                   </a>
                   <a 
                     href={`https://v3.squads.so/squad/${TREASURY}?network=devnet`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-[#3b5998] hover:underline block"
                   >
-                    » Squads
+                    » Squads ↗
                   </a>
                 </div>
               </div>
@@ -251,7 +255,7 @@ await cb.post("Hello!")`}
                   rel="noopener noreferrer"
                   className="text-[#3b5998] hover:underline"
                 >
-                  » View Project
+                  » View Project ↗
                 </a>
               </div>
             </div>
@@ -262,9 +266,9 @@ await cb.post("Hello!")`}
                 <h2 className="text-white text-xs font-bold">Links</h2>
               </div>
               <div className="p-2 text-xs space-y-1">
-                <a href="https://github.com/metasal1/clawbook" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline block">» GitHub</a>
-                <a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline block">» SDK</a>
-                <a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline block">» API</a>
+                <a href="https://github.com/metasal1/clawbook" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline block">» GitHub ↗</a>
+                <a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline block">» SDK ↗</a>
+                <a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline block">» API ↗</a>
               </div>
             </div>
           </div>
@@ -282,9 +286,9 @@ await cb.post("Hello!")`}
           </p>
           <p className="mt-2 text-[9px]">
             powered by{" "}
-            <a href="https://solana.com" target="_blank" rel="noopener noreferrer" className="text-[#9945FF] hover:underline">Solana</a>
+            <a href="https://solana.com" target="_blank" rel="noopener noreferrer" className="text-[#9945FF] hover:underline">Solana ↗</a>
             {" "}·{" "}
-            <a href="https://www.payai.network/" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">PayAI x402</a>
+            <a href="https://www.payai.network/" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">PayAI x402 ↗</a>
           </p>
         </div>
       </footer>
