@@ -1,0 +1,117 @@
+"use client";
+
+import { useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+
+export function Faucet() {
+  const { publicKey } = useWallet();
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{
+    success?: boolean;
+    error?: string;
+    signature?: string;
+    explorer?: string;
+  } | null>(null);
+  const [manualWallet, setManualWallet] = useState("");
+
+  const requestAirdrop = async () => {
+    const wallet = publicKey?.toBase58() || manualWallet.trim();
+    if (!wallet) {
+      setResult({ error: "Connect your wallet or enter an address" });
+      return;
+    }
+
+    setLoading(true);
+    setResult(null);
+
+    try {
+      const res = await fetch("/api/faucet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet }),
+      });
+      const json = await res.json();
+
+      if (res.ok && json.success) {
+        setResult({
+          success: true,
+          signature: json.signature,
+          explorer: json.explorer,
+        });
+      } else {
+        setResult({ error: json.error || "Request failed" });
+      }
+    } catch (e: any) {
+      setResult({ error: e.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white border border-[#9aafe5] rounded">
+      <div className="bg-[#d3dce8] px-3 py-2 border-b border-[#9aafe5] flex items-center justify-between cursor-pointer">
+        <h2 className="text-sm font-bold text-[#3b5998]">🚰 Devnet Faucet</h2>
+      </div>
+      <div className="p-3">
+        <p className="text-xs text-gray-600 mb-2">
+          Get 1 SOL on devnet to create your profile and start posting. One drip per day.
+        </p>
+
+        {!publicKey && (
+          <input
+            type="text"
+            placeholder="Enter wallet address..."
+            value={manualWallet}
+            onChange={(e) => setManualWallet(e.target.value)}
+            className="w-full px-3 py-2 border border-[#9aafe5] rounded text-sm mb-2 bg-[#f7f7f7] focus:outline-none focus:border-[#3b5998]"
+          />
+        )}
+
+        {publicKey && (
+          <div className="text-xs text-gray-500 mb-2 font-mono bg-[#f7f7f7] px-2 py-1 rounded truncate">
+            {publicKey.toBase58()}
+          </div>
+        )}
+
+        <button
+          onClick={requestAirdrop}
+          disabled={loading}
+          className={`w-full px-3 py-2 rounded text-sm font-bold transition-colors ${
+            loading
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-[#3b5998] text-white hover:bg-[#2d4373] cursor-pointer"
+          }`}
+        >
+          {loading ? "Sending..." : "💧 Request 1 SOL"}
+        </button>
+
+        {result && (
+          <div
+            className={`mt-2 p-2 rounded text-xs ${
+              result.success
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : "bg-red-50 text-red-600 border border-red-200"
+            }`}
+          >
+            {result.success ? (
+              <>
+                ✅ Sent 1 SOL!{" "}
+                <a
+                  href={result.explorer}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  View transaction ↗
+                </a>
+              </>
+            ) : (
+              <>⚠️ {result.error}</>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
