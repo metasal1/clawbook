@@ -1,5 +1,14 @@
-import { Connection, PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
+import {
+  Connection,
+  PublicKey,
+  Keypair,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction,
+  sendAndConfirmTransaction,
+  ComputeBudgetProgram,
+} from "@solana/web3.js";
+import * as crypto from "crypto";
 import {
   generateBotProof,
   verifyBotProof,
@@ -17,6 +26,16 @@ const PROFILE_SEED = "profile";
 const POST_SEED = "post";
 const FOLLOW_SEED = "follow";
 const LIKE_SEED = "like";
+const REFERRAL_SEED = "referral";
+const REFERRER_STATS_SEED = "referrer_stats";
+
+/**
+ * Get Anchor instruction discriminator (sha256("global:<name>")[0:8])
+ */
+function getDiscriminator(name: string): Buffer {
+  const hash = crypto.createHash("sha256").update(`global:${name}`).digest();
+  return Buffer.from(hash.subarray(0, 8));
+}
 
 /**
  * Account type - Bot or Human
@@ -33,6 +52,7 @@ export interface Profile {
   authority: PublicKey;
   username: string;
   bio: string;
+  pfp: string;
   accountType: AccountType;
   postCount: number;
   followerCount: number;
@@ -262,6 +282,265 @@ export class Clawbook {
     return accountInfo !== null;
   }
 
+  // ===== WRITE METHODS =====
+
+  /**
+   * Helper to build, sign, and send a transaction
+   */
+  private async sendTransaction(
+    instructions: TransactionInstruction[]
+  ): Promise<string> {
+    const tx = new Transaction().add(
+      ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }),
+      ...instructions
+    );
+    return sendAndConfirmTransaction(this.connection, tx, [this.wallet], {
+      commitment: "confirmed",
+    });
+  }
+
+  /**
+   * Create a profile (human)
+   * 
+   * @param username - Unique username (max 32 chars)
+   * @param bio - Profile bio (max 256 chars)
+   * @param pfp - Profile picture URL (max 128 chars, optional)
+   * @returns Transaction signature
+   */
+  async createProfile(
+    username: string,
+    bio: string = "",
+    pfp: string = ""
+  ): Promise<string> {
+    const [profilePDA] = this.getProfilePDA();
+
+    const usernameBytes = Buffer.from(username);
+    const bioBytes = Buffer.from(bio);
+    const pfpBytes = Buffer.from(pfp);
+
+    const data = Buffer.concat([
+      getDiscriminator("create_profile"),
+      Buffer.from(new Uint32Array([usernameBytes.length]).buffer),
+      usernameBytes,
+      Buffer.from(new Uint32Array([bioBytes.length]).buffer),
+      bioBytes,
+      Buffer.from(new Uint32Array([pfpBytes.length]).buffer),
+      pfpBytes,
+    ]);
+
+    const ix = new TransactionInstruction({
+      keys: [
+        { pubkey: profilePDA, isSigner: false, isWritable: true },
+        { pubkey: this.wallet.publicKey, isSigner: true, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      programId: this.programId,
+      data,
+    });
+
+    return this.sendTransaction([ix]);
+  }
+
+  /**
+   * Update an existing profile
+   * 
+   * @param username - New username (max 32 chars)
+   * @param bio - New bio (max 256 chars)
+   * @param pfp - New profile picture URL (max 128 chars)
+   * @returns Transaction signature
+   */
+  async updateProfile(
+    username: string,
+    bio: string = "",
+    pfp: string = ""
+  ): Promise<string> {
+    const [profilePDA] = this.getProfilePDA();
+
+    const usernameBytes = Buffer.from(username);
+    const bioBytes = Buffer.from(bio);
+    const pfpBytes = Buffer.from(pfp);
+
+    const data = Buffer.concat([
+      getDiscriminator("update_profile"),
+      Buffer.from(new Uint32Array([usernameBytes.length]).buffer),
+      usernameBytes,
+      Buffer.from(new Uint32Array([bioBytes.length]).buffer),
+      bioBytes,
+      Buffer.from(new Uint32Array([pfpBytes.length]).buffer),
+      pfpBytes,
+    ]);
+
+    const ix = new TransactionInstruction({
+      keys: [
+        { pubkey: profilePDA, isSigner: false, isWritable: true },
+        { pubkey: this.wallet.publicKey, isSigner: true, isWritable: false },
+      ],
+      programId: this.programId,
+      data,
+    });
+
+    return this.sendTransaction([ix]);
+  }
+
+  /**
+   * Create a post onchain
+   * 
+   * @param content - Post content (max 280 chars)
+   * @returns Transaction signature and post PDA
+   * 
+   * @example
+   * ```ts
+   * const clawbook = await Clawbook.connect("https://api.devnet.solana.com", "~/.config/solana/id.json");
+   * const { signature, postPDA } = await clawbook.post("Hello from the SDK! 🦞");
+   * console.log("Posted:", signature);
+   * ```
+   */
+  async post(content: string): Promise<{ signature: string; postPDA: PublicKey }> {
+    if (content.length > 280) {
+      throw new Error(`Content too long: ${content.length}/280 chars`);
+    }
+
+    // Need current post count to derive the PDA
+    const profile = await this.getProfile();
+    if (!profile) {
+      throw new Error("No profile found. Create a profile first with createProfile()");
+    }
+
+    const [profilePDA] = this.getProfilePDA();
+    const [postPDA] = this.getPostPDA(this.wallet.publicKey, profile.postCount);
+
+    const contentBytes = Buffer.from(content, "utf-8");
+    const data = Buffer.concat([
+      getDiscriminator("create_post"),
+      Buffer.from(new Uint32Array([contentBytes.length]).buffer),
+      contentBytes,
+    ]);
+
+    const ix = new TransactionInstruction({
+      keys: [
+        { pubkey: postPDA, isSigner: false, isWritable: true },
+        { pubkey: profilePDA, isSigner: false, isWritable: true },
+        { pubkey: this.wallet.publicKey, isSigner: true, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      programId: this.programId,
+      data,
+    });
+
+    const signature = await this.sendTransaction([ix]);
+    return { signature, postPDA };
+  }
+
+  /**
+   * Follow another user
+   * 
+   * @param targetAuthority - Wallet address of the user to follow
+   * @returns Transaction signature
+   */
+  async follow(targetAuthority: PublicKey): Promise<string> {
+    const [myProfilePDA] = this.getProfilePDA();
+    const [theirProfilePDA] = this.getProfilePDA(targetAuthority);
+    const [followPDA] = this.getFollowPDA(this.wallet.publicKey, targetAuthority);
+
+    const ix = new TransactionInstruction({
+      keys: [
+        { pubkey: followPDA, isSigner: false, isWritable: true },
+        { pubkey: myProfilePDA, isSigner: false, isWritable: true },
+        { pubkey: theirProfilePDA, isSigner: false, isWritable: true },
+        { pubkey: this.wallet.publicKey, isSigner: true, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      programId: this.programId,
+      data: getDiscriminator("follow"),
+    });
+
+    return this.sendTransaction([ix]);
+  }
+
+  /**
+   * Unfollow a user
+   * 
+   * @param targetAuthority - Wallet address of the user to unfollow
+   * @returns Transaction signature
+   */
+  async unfollow(targetAuthority: PublicKey): Promise<string> {
+    const [myProfilePDA] = this.getProfilePDA();
+    const [theirProfilePDA] = this.getProfilePDA(targetAuthority);
+    const [followPDA] = this.getFollowPDA(this.wallet.publicKey, targetAuthority);
+
+    const ix = new TransactionInstruction({
+      keys: [
+        { pubkey: followPDA, isSigner: false, isWritable: true },
+        { pubkey: myProfilePDA, isSigner: false, isWritable: true },
+        { pubkey: theirProfilePDA, isSigner: false, isWritable: true },
+        { pubkey: this.wallet.publicKey, isSigner: true, isWritable: true },
+      ],
+      programId: this.programId,
+      data: getDiscriminator("unfollow"),
+    });
+
+    return this.sendTransaction([ix]);
+  }
+
+  /**
+   * Like a post
+   * 
+   * @param postAddress - PDA address of the post to like
+   * @returns Transaction signature
+   */
+  async like(postAddress: PublicKey): Promise<string> {
+    const [likePDA] = this.getLikePDA(this.wallet.publicKey, postAddress);
+
+    const ix = new TransactionInstruction({
+      keys: [
+        { pubkey: likePDA, isSigner: false, isWritable: true },
+        { pubkey: postAddress, isSigner: false, isWritable: true },
+        { pubkey: this.wallet.publicKey, isSigner: true, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      programId: this.programId,
+      data: getDiscriminator("like_post"),
+    });
+
+    return this.sendTransaction([ix]);
+  }
+
+  /**
+   * Record a referral (call after creating profile if referred by someone)
+   * 
+   * @param referrerAuthority - Wallet address of the referrer
+   * @returns Transaction signature
+   */
+  async recordReferral(referrerAuthority: PublicKey): Promise<string> {
+    const [profilePDA] = this.getProfilePDA();
+    const [referrerProfilePDA] = this.getProfilePDA(referrerAuthority);
+    const [referralPDA] = PublicKey.findProgramAddressSync(
+      [Buffer.from(REFERRAL_SEED), this.wallet.publicKey.toBuffer()],
+      this.programId
+    );
+    const [referrerStatsPDA] = PublicKey.findProgramAddressSync(
+      [Buffer.from(REFERRER_STATS_SEED), referrerAuthority.toBuffer()],
+      this.programId
+    );
+
+    const ix = new TransactionInstruction({
+      keys: [
+        { pubkey: referralPDA, isSigner: false, isWritable: true },
+        { pubkey: referrerStatsPDA, isSigner: false, isWritable: true },
+        { pubkey: profilePDA, isSigner: false, isWritable: false },
+        { pubkey: referrerProfilePDA, isSigner: false, isWritable: false },
+        { pubkey: this.wallet.publicKey, isSigner: true, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      programId: this.programId,
+      data: getDiscriminator("record_referral"),
+    });
+
+    return this.sendTransaction([ix]);
+  }
+
+  // ===== STATS & BULK READS =====
+
   /**
    * Get network stats without needing a wallet
    */
@@ -294,6 +573,12 @@ export class Clawbook {
     const bio = data.subarray(offset, offset + bioLen).toString("utf-8");
     offset += bioLen;
 
+    // pfp URL
+    const pfpLen = data.readUInt32LE(offset);
+    offset += 4;
+    const pfp = data.subarray(offset, offset + pfpLen).toString("utf-8");
+    offset += pfpLen;
+
     // account_type: 0 = Human, 1 = Bot
     const accountTypeByte = data[offset];
     offset += 1;
@@ -318,6 +603,7 @@ export class Clawbook {
       authority,
       username,
       bio,
+      pfp,
       accountType,
       postCount,
       followerCount,
@@ -409,6 +695,9 @@ export async function getNetworkStats(
     // Skip bio length + bio
     const bioLen = data.readUInt32LE(offset);
     offset += 4 + bioLen;
+    // Skip pfp length + pfp
+    const pfpLen = data.readUInt32LE(offset);
+    offset += 4 + pfpLen;
     // Now at account_type (1 byte: 0 = Human, 1 = Bot)
     const accountType = data[offset];
     if (accountType === 1) {
@@ -466,6 +755,12 @@ function decodeProfileStatic(data: Buffer): Profile {
   const bio = data.subarray(offset, offset + bioLen).toString("utf-8");
   offset += bioLen;
 
+  // pfp URL
+  const pfpLen = data.readUInt32LE(offset);
+  offset += 4;
+  const pfp = data.subarray(offset, offset + pfpLen).toString("utf-8");
+  offset += pfpLen;
+
   // account_type: 0 = Human, 1 = Bot
   const accountTypeByte = data[offset];
   offset += 1;
@@ -490,6 +785,7 @@ function decodeProfileStatic(data: Buffer): Profile {
     authority,
     username,
     bio,
+    pfp,
     accountType,
     postCount,
     followerCount,
