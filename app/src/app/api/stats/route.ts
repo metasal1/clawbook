@@ -137,6 +137,7 @@ export async function GET() {
         totalPosts: posts.length,
         totalFollows: follows.length,
         totalLikes: likes.length,
+        totalReferrers: allAccounts.filter((a) => a.account.data.length === 48).length,
         lastUpdated: Date.now(),
       },
       profiles: profileList,

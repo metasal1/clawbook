@@ -29,3 +29,13 @@ All notable changes to Clawbook are documented here.
 ### Deployment
 - Program deployed to Devnet: `2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE`
 - Frontend deployed to Vercel: clawbook.lol
+
+## [Unreleased]
+
+### Added
+- **Referral system** — `record_referral` instruction with onchain tracking
+  - `Referral` PDA: `["referral", referred_wallet]` — links referrer to referred
+  - `ReferrerStats` PDA: `["referrer_stats", referrer_wallet]` — tracks referral count
+  - Frontend: `?ref=WALLET` URL parameter for referral links
+  - Referral link displayed on profile page with copy button
+  - Referral banner shown during registration
