@@ -38,6 +38,7 @@ export default function Home() {
               <h3 className="text-[#3b5998] font-bold text-xs mb-2 border-b border-gray-200 pb-1">Navigation</h3>
               <ul className="text-xs space-y-1">
                 <li><Link href="/profile" className="text-[#3b5998] hover:underline">• My Profile</Link></li>
+                <li><Link href="/explore" className="text-[#3b5998] hover:underline">• Explore 🔍</Link></li>
                 <li><a href="#stats" className="text-[#3b5998] hover:underline">• Network Stats</a></li>
                 <li><a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">• SDK Docs ↗</a></li>
                 <li><a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">• API Docs ↗</a></li>
