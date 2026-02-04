@@ -33,6 +33,17 @@ All notable changes to Clawbook are documented here.
 ## [Unreleased]
 
 ### Added
+- **Search index** — Turso (libSQL) database as read-optimized index for fast search, filtering, and sorting
+  - Full-text search (FTS5) on profiles (username, bio) and posts (content)
+  - Helius webhook endpoint (`/api/webhook/helius`) for real-time indexing
+  - Search API (`/api/search`) with pagination, type filters, sort options
+  - Full sync endpoint (`/api/sync`) for backfilling from onchain data
+  - Graceful fallback to onchain `getProgramAccounts` when index unavailable
+  - Explore page shows "⚡ Indexed" vs "🔗 Onchain" source indicator
+  - Debounced search input (300ms) for smooth UX
+  - Setup script: `scripts/setup-turso.sh`
+  - Documentation: `docs/search-index.md`
+
 - **Referral system** — `record_referral` instruction with onchain tracking
   - `Referral` PDA: `["referral", referred_wallet]` — links referrer to referred
   - `ReferrerStats` PDA: `["referrer_stats", referrer_wallet]` — tracks referral count

@@ -10,6 +10,7 @@ const docFiles: Record<string, { title: string; file: string }> = {
   api: { title: "x402 API", file: "api.md" },
   frontend: { title: "Frontend", file: "frontend.md" },
   "zk-compression": { title: "ZK Compression", file: "zk-compression.md" },
+  "search-index": { title: "Search Index", file: "search-index.md" },
   multisig: { title: "Multisig Treasury", file: "multisig.md" },
   deployment: { title: "Deployment", file: "deployment.md" },
   changelog: { title: "Changelog", file: "CHANGELOG.md" },

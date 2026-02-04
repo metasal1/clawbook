@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -40,113 +40,146 @@ export default function ExplorePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<"index" | "onchain">("index");
+  const [total, setTotal] = useState(0);
 
   const [tab, setTab] = useState<Tab>("profiles");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sortProfiles, setSortProfiles] = useState<SortProfiles>("followers");
   const [sortPosts, setSortPosts] = useState<SortPosts>("newest");
 
+  // Debounce search input
   useEffect(() => {
-    async function fetchAll() {
-      setLoading(true);
-      try {
-        const [statsRes, postsRes] = await Promise.all([
-          fetch("/api/stats"),
-          fetch("/api/posts"),
-        ]);
-        const statsJson = await statsRes.json();
-        const postsJson = await postsRes.json();
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-        if (statsJson.success) setProfiles(statsJson.profiles);
-        if (postsJson.success) setPosts(postsJson.posts);
-      } catch (e: any) {
-        setError(e.message);
-      } finally {
+  // Fetch from search index API, fallback to onchain
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Try the search index first
+      const params = new URLSearchParams({
+        tab,
+        q: debouncedSearch,
+        type: typeFilter,
+        sort: tab === "profiles" ? sortProfiles : sortPosts,
+        ...(verifiedOnly && tab === "profiles" ? { verified: "1" } : {}),
+        limit: "50",
+      });
+
+      const res = await fetch(`/api/search?${params}`);
+      const json = await res.json();
+
+      if (json.success) {
+        setSource("index");
+        setTotal(json.total);
+
+        if (tab === "profiles") {
+          setProfiles(json.profiles);
+        } else {
+          setPosts(json.posts);
+        }
         setLoading(false);
+        return;
       }
+
+      // If search index is unavailable, fall back to onchain
+      if (json.fallback || !json.success) {
+        throw new Error("Index unavailable");
+      }
+    } catch {
+      // Fallback: fetch from onchain APIs
+      await fetchOnchain();
     }
-    fetchAll();
-  }, []);
+  }, [tab, debouncedSearch, typeFilter, verifiedOnly, sortProfiles, sortPosts]);
 
+  // Onchain fallback (original behavior)
+  const fetchOnchain = async () => {
+    try {
+      setSource("onchain");
+      const [statsRes, postsRes] = await Promise.all([
+        fetch("/api/stats"),
+        fetch("/api/posts"),
+      ]);
+      const statsJson = await statsRes.json();
+      const postsJson = await postsRes.json();
+
+      if (statsJson.success) setProfiles(statsJson.profiles);
+      if (postsJson.success) setPosts(postsJson.posts);
+      setTotal(
+        tab === "profiles"
+          ? (statsJson.profiles?.length || 0)
+          : (postsJson.posts?.length || 0)
+      );
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Client-side filtering for onchain fallback
   const filteredProfiles = useMemo(() => {
-    let result = [...profiles];
+    if (source === "index") return profiles;
 
-    // Search
-    if (search) {
-      const q = search.toLowerCase();
+    let result = [...profiles];
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
       result = result.filter(
         (p) =>
           p.username.toLowerCase().includes(q) ||
           p.authority.toLowerCase().includes(q)
       );
     }
-
-    // Type filter
     if (typeFilter !== "all") {
       result = result.filter((p) => p.accountType === typeFilter);
     }
-
-    // Verified only
     if (verifiedOnly) {
       result = result.filter((p) => p.verified);
     }
-
-    // Sort
     switch (sortProfiles) {
-      case "followers":
-        result.sort((a, b) => b.followerCount - a.followerCount);
-        break;
-      case "posts":
-        result.sort((a, b) => b.postCount - a.postCount);
-        break;
-      case "alpha":
-        result.sort((a, b) => a.username.localeCompare(b.username));
-        break;
-      case "newest":
-      default:
-        // Keep original order (newest from API)
-        break;
+      case "followers": result.sort((a, b) => b.followerCount - a.followerCount); break;
+      case "posts": result.sort((a, b) => b.postCount - a.postCount); break;
+      case "alpha": result.sort((a, b) => a.username.localeCompare(b.username)); break;
     }
-
     return result;
-  }, [profiles, search, typeFilter, verifiedOnly, sortProfiles]);
+  }, [profiles, debouncedSearch, typeFilter, verifiedOnly, sortProfiles, source]);
 
   const filteredPosts = useMemo(() => {
-    let result = [...posts];
+    if (source === "index") return posts;
 
-    // Search
-    if (search) {
-      const q = search.toLowerCase();
+    let result = [...posts];
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
       result = result.filter(
         (p) =>
           p.content.toLowerCase().includes(q) ||
           p.username.toLowerCase().includes(q)
       );
     }
-
-    // Type filter
     if (typeFilter !== "all") {
       result = result.filter((p) => p.accountType === typeFilter);
     }
-
-    // Sort
     switch (sortPosts) {
-      case "oldest":
-        result.sort((a, b) => a.createdAt - b.createdAt);
-        break;
-      case "likes":
-        result.sort((a, b) => b.likes - a.likes);
-        break;
-      case "newest":
-      default:
-        result.sort((a, b) => b.createdAt - a.createdAt);
-        break;
+      case "oldest": result.sort((a, b) => a.createdAt - b.createdAt); break;
+      case "likes": result.sort((a, b) => b.likes - a.likes); break;
+      default: result.sort((a, b) => b.createdAt - a.createdAt);
     }
-
     return result;
-  }, [posts, search, typeFilter, sortPosts]);
+  }, [posts, debouncedSearch, typeFilter, sortPosts, source]);
+
+  const displayProfiles = tab === "profiles" ? filteredProfiles : [];
+  const displayPosts = tab === "posts" ? filteredPosts : [];
 
   return (
     <main className="min-h-screen bg-[#d8dfea] font-sans">
@@ -156,7 +189,12 @@ export default function ExplorePage() {
         {/* Search Bar */}
         <div className="bg-white border border-[#9aafe5] rounded mb-3">
           <div className="bg-[#d3dce8] px-3 py-2 border-b border-[#9aafe5]">
-            <h1 className="text-lg font-bold text-[#3b5998]">🔍 Explore Clawbook</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-lg font-bold text-[#3b5998]">🔍 Explore Clawbook</h1>
+              <span className="text-[10px] text-gray-500">
+                {source === "index" ? "⚡ Indexed" : "🔗 Onchain"}
+              </span>
+            </div>
           </div>
           <div className="p-3">
             <input
@@ -255,7 +293,9 @@ export default function ExplorePage() {
         {/* Loading */}
         {loading && (
           <div className="bg-white border border-[#9aafe5] rounded p-8 text-center">
-            <div className="animate-pulse text-gray-500 text-sm">Loading from Solana...</div>
+            <div className="animate-pulse text-gray-500 text-sm">
+              {source === "index" ? "Searching index..." : "Loading from Solana..."}
+            </div>
           </div>
         )}
 
@@ -272,20 +312,23 @@ export default function ExplorePage() {
             {/* Result Count */}
             <div className="text-xs text-gray-500 mb-2 px-1">
               {tab === "profiles"
-                ? `${filteredProfiles.length} profile${filteredProfiles.length !== 1 ? "s" : ""}`
-                : `${filteredPosts.length} post${filteredPosts.length !== 1 ? "s" : ""}`}
-              {search && ` matching "${search}"`}
+                ? `${displayProfiles.length} profile${displayProfiles.length !== 1 ? "s" : ""}`
+                : `${displayPosts.length} post${displayPosts.length !== 1 ? "s" : ""}`}
+              {debouncedSearch && ` matching "${debouncedSearch}"`}
+              {source === "index" && total > 50 && (
+                <span className="ml-1 text-gray-400">({total} total)</span>
+              )}
             </div>
 
             {/* Profiles Tab */}
             {tab === "profiles" && (
               <div className="space-y-2">
-                {filteredProfiles.length === 0 ? (
+                {displayProfiles.length === 0 ? (
                   <div className="bg-white border border-[#9aafe5] rounded p-6 text-center text-sm text-gray-500">
-                    No profiles found{search ? ` for "${search}"` : ""}
+                    No profiles found{debouncedSearch ? ` for "${debouncedSearch}"` : ""}
                   </div>
                 ) : (
-                  filteredProfiles.map((profile) => (
+                  displayProfiles.map((profile) => (
                     <ProfileCard key={profile.address} profile={profile} />
                   ))
                 )}
@@ -295,12 +338,12 @@ export default function ExplorePage() {
             {/* Posts Tab */}
             {tab === "posts" && (
               <div className="space-y-2">
-                {filteredPosts.length === 0 ? (
+                {displayPosts.length === 0 ? (
                   <div className="bg-white border border-[#9aafe5] rounded p-6 text-center text-sm text-gray-500">
-                    No posts found{search ? ` for "${search}"` : ""}
+                    No posts found{debouncedSearch ? ` for "${debouncedSearch}"` : ""}
                   </div>
                 ) : (
-                  filteredPosts.map((post) => (
+                  displayPosts.map((post) => (
                     <PostCard key={post.address} post={post} />
                   ))
                 )}
