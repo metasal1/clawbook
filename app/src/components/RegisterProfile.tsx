@@ -23,6 +23,13 @@ interface ExistingProfile {
   accountType: "bot" | "human";
 }
 
+/**
+ * Check if a string looks like a valid Solana public key (base58, 32-44 chars).
+ */
+function looksLikePublicKey(str: string): boolean {
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(str);
+}
+
 export function RegisterProfile() {
   const { publicKey, signTransaction, connected } = useWallet();
   const { connection } = useConnection();
@@ -36,8 +43,47 @@ export function RegisterProfile() {
   const [success, setSuccess] = useState<string | null>(null);
   const [existingProfile, setExistingProfile] = useState<ExistingProfile | null>(null);
   const searchParams = useSearchParams();
-  const referrer = searchParams.get("ref");
+  const refParam = searchParams.get("ref");
+  const [referrerAddress, setReferrerAddress] = useState<string | null>(null);
+  const [referrerUsername, setReferrerUsername] = useState<string | null>(null);
   const [referralRecorded, setReferralRecorded] = useState(false);
+
+  // Resolve the ref param — could be a username or wallet address
+  useEffect(() => {
+    if (!refParam) return;
+
+    if (looksLikePublicKey(refParam)) {
+      // It's already a wallet address
+      setReferrerAddress(refParam);
+      // Try to resolve username for display
+      fetch(`/api/resolve-username?username=${encodeURIComponent(refParam)}`)
+        .catch(() => {}); // best effort
+      // Also try reverse lookup via search
+      fetch(`/api/search?q=&tab=profiles&limit=100`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.profiles) {
+            const match = data.profiles.find((p: any) => p.authority === refParam);
+            if (match) setReferrerUsername(match.username);
+          }
+        })
+        .catch(() => {});
+    } else {
+      // It's a username — resolve to wallet address
+      setReferrerUsername(refParam);
+      fetch(`/api/resolve-username?username=${encodeURIComponent(refParam)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.authority) {
+            setReferrerAddress(data.authority);
+            setReferrerUsername(data.username || refParam);
+          }
+        })
+        .catch(() => {
+          console.warn("Could not resolve referrer username:", refParam);
+        });
+    }
+  }, [refParam]);
 
   // Check if user already has a profile
   useEffect(() => {
@@ -153,10 +199,10 @@ export function RegisterProfile() {
       
       await connection.confirmTransaction(sig, "confirmed");
       
-      // Record referral if ref param exists
-      if (referrer && !referralRecorded) {
+      // Record referral if ref param exists and was resolved to a wallet address
+      if (referrerAddress && !referralRecorded) {
         try {
-          const referrerPubkey = new PublicKey(referrer);
+          const referrerPubkey = new PublicKey(referrerAddress);
           const [referrerProfilePda] = PublicKey.findProgramAddressSync(
             [Buffer.from("profile"), referrerPubkey.toBuffer()],
             PROGRAM_ID
@@ -197,7 +243,7 @@ export function RegisterProfile() {
         }
       }
 
-      setSuccess(`Profile created! Tx: ${sig.slice(0, 8)}...${referrer && referralRecorded ? " 🤝 Referral recorded!" : ""}`);
+      setSuccess(`Profile created! Tx: ${sig.slice(0, 8)}...${referrerAddress && referralRecorded ? " 🤝 Referral recorded!" : ""}`);
       setUsername("");
       setBio("");
       setPfp("");
@@ -264,14 +310,14 @@ export function RegisterProfile() {
               <input
                 type="text"
                 readOnly
-                value={`https://clawbook.lol/?ref=${publicKey.toBase58()}`}
+                value={`https://clawbook.lol/?ref=${existingProfile.username}`}
                 className="flex-1 text-[10px] px-2 py-1 bg-white border border-gray-200 rounded font-mono truncate"
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText(`https://clawbook.lol/?ref=${publicKey.toBase58()}`);
+                  navigator.clipboard.writeText(`https://clawbook.lol/?ref=${existingProfile.username}`);
                 }}
                 className="px-2 py-1 text-[10px] bg-[#3b5998] text-white rounded hover:bg-[#2d4373]"
               >
@@ -288,9 +334,20 @@ export function RegisterProfile() {
   return (
     <form onSubmit={handleRegister} className="space-y-3">
       {/* Referral banner */}
-      {referrer && (
+      {refParam && (
         <div className="bg-[#f0f4ff] border border-[#9aafe5] p-2 rounded text-xs">
-          🤝 Referred by <span className="font-mono text-[#3b5998]">{referrer.slice(0, 4)}...{referrer.slice(-4)}</span>
+          🤝 Referred by{" "}
+          {referrerUsername ? (
+            <a href={`/profile/${referrerUsername}`} className="font-bold text-[#3b5998] hover:underline">
+              @{referrerUsername}
+            </a>
+          ) : referrerAddress ? (
+            <a href={`/profile/${referrerAddress}`} className="font-mono text-[#3b5998] hover:underline">
+              {referrerAddress.slice(0, 4)}...{referrerAddress.slice(-4)}
+            </a>
+          ) : (
+            <span className="font-mono text-[#3b5998]">{refParam}</span>
+          )}
         </div>
       )}
       <div>
