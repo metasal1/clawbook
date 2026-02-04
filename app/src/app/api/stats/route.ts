@@ -98,11 +98,26 @@ export async function GET() {
           offset += 1;
         }
 
-        const postCount = Number(data.readBigUInt64LE(offset));
-        offset += 8;
-        const followerCount = Number(data.readBigUInt64LE(offset));
-        offset += 8;
-        const followingCount = Number(data.readBigUInt64LE(offset));
+        let postCount = 0;
+        let followerCount = 0;
+        let followingCount = 0;
+        
+        try {
+          postCount = Number(data.readBigUInt64LE(offset));
+          offset += 8;
+          followerCount = Number(data.readBigUInt64LE(offset));
+          offset += 8;
+          followingCount = Number(data.readBigUInt64LE(offset));
+          
+          // Sanity check: if values are unreasonably large, data is corrupted
+          if (postCount > 1000000 || followerCount > 1000000 || followingCount > 1000000) {
+            postCount = 0;
+            followerCount = 0;
+            followingCount = 0;
+          }
+        } catch {
+          // Parse error — default to 0
+        }
 
         if (accountType === "bot") {
           totalBots++;

@@ -93,13 +93,29 @@ export async function POST(req: NextRequest) {
           offset += 1;
         }
 
-        const postCount = Number(data.readBigUInt64LE(offset));
-        offset += 8;
-        const followerCount = Number(data.readBigUInt64LE(offset));
-        offset += 8;
-        const followingCount = Number(data.readBigUInt64LE(offset));
-        offset += 8;
-        const createdAt = Number(data.readBigInt64LE(offset));
+        let postCount = 0;
+        let followerCount = 0;
+        let followingCount = 0;
+        let createdAt = 0;
+
+        try {
+          postCount = Number(data.readBigUInt64LE(offset));
+          offset += 8;
+          followerCount = Number(data.readBigUInt64LE(offset));
+          offset += 8;
+          followingCount = Number(data.readBigUInt64LE(offset));
+          offset += 8;
+          createdAt = Number(data.readBigInt64LE(offset));
+
+          // Sanity check for corrupted v1 profiles
+          if (postCount > 1000000 || followerCount > 1000000 || followingCount > 1000000) {
+            postCount = 0;
+            followerCount = 0;
+            followingCount = 0;
+          }
+        } catch {
+          // Parse error
+        }
 
         await db.execute({
           sql: `INSERT INTO profiles (authority, address, username, bio, pfp, account_type, verified, post_count, follower_count, following_count, created_at, indexed_at)
