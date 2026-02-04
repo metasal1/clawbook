@@ -124,7 +124,7 @@ export function PostFeed({ author }: { author?: string }) {
         <div key={post.address} className="bg-white border border-gray-200 rounded p-3">
           {/* Author header */}
           <div className="flex items-center gap-2 mb-2">
-            <Link href={`/profile/${post.author}`}>
+            <Link href={`/profile/${post.username || post.author}`}>
               {post.pfp ? (
                 <img src={post.pfp} alt="" className="w-8 h-8 rounded-full object-cover hover:ring-2 hover:ring-[#3b5998] transition-all" />
               ) : (
@@ -136,7 +136,7 @@ export function PostFeed({ author }: { author?: string }) {
             <div className="min-w-0">
               <div className="flex items-center gap-1">
                 <Link
-                  href={`/profile/${post.author}`}
+                  href={`/profile/${post.username || post.author}`}
                   className="font-bold text-[#3b5998] text-sm truncate hover:underline"
                 >
                   @{post.username}

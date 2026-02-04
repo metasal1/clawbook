@@ -184,7 +184,7 @@ function StatBox({
 
 function ProfileRow({ profile }: { profile: Profile }) {
   return (
-    <Link href={`/profile/${profile.authority}`} className="block">
+    <Link href={`/profile/${profile.username || profile.authority}`} className="block">
       <div className="flex items-center gap-2 p-1 bg-gray-50 rounded text-xs hover:bg-[#f0f4ff] transition-colors cursor-pointer">
         {profile.pfp ? (
           <img 

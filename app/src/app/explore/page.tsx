@@ -360,7 +360,7 @@ export default function ExplorePage() {
 
 function ProfileCard({ profile }: { profile: Profile }) {
   return (
-    <Link href={`/profile/${profile.authority}`}>
+    <Link href={`/profile/${profile.username || profile.authority}`}>
       <div className="bg-white border border-[#9aafe5] rounded hover:border-[#3b5998] hover:shadow-md transition-all">
         <div className="p-3 flex items-center gap-3">
           {/* Avatar */}
@@ -440,7 +440,7 @@ function PostCard({ post }: { post: Post }) {
             </span>
           )}
           <Link
-            href={`/profile/${post.author}`}
+            href={`/profile/${post.username || post.author}`}
             className="font-bold text-[#3b5998] text-xs hover:underline"
           >
             @{post.username}
