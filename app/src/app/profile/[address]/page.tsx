@@ -35,12 +35,23 @@ function getUnfollowDisc() {
   return crypto.createHash("sha256").update("global:unfollow").digest().subarray(0, 8);
 }
 
+/**
+ * Check if a string looks like a valid Solana public key (base58, 32-44 chars).
+ * Quick heuristic — doesn't fully validate base58 encoding.
+ */
+function looksLikePublicKey(str: string): boolean {
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(str);
+}
+
 export default function ViewProfile() {
   const params = useParams();
-  const address = params.address as string;
+  const addressParam = params.address as string;
   const { publicKey, signTransaction, connected } = useWallet();
   const { connection } = useConnection();
 
+  const [resolvedAddress, setResolvedAddress] = useState<string | null>(
+    looksLikePublicKey(addressParam) ? addressParam : null
+  );
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,16 +59,45 @@ export default function ViewProfile() {
   const [checkingFollow, setCheckingFollow] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
-  const isOwnProfile = publicKey?.toBase58() === address;
+  const isOwnProfile = publicKey?.toBase58() === resolvedAddress;
+
+  // Resolve username to wallet address if needed
+  useEffect(() => {
+    if (looksLikePublicKey(addressParam)) {
+      setResolvedAddress(addressParam);
+      return;
+    }
+
+    // It's a username — resolve it via the API
+    async function resolveUsername() {
+      try {
+        const res = await fetch(`/api/resolve-username?username=${encodeURIComponent(addressParam)}`);
+        const data = await res.json();
+        if (data.success && data.authority) {
+          setResolvedAddress(data.authority);
+        } else {
+          setError(`No profile found for @${addressParam}`);
+          setLoading(false);
+        }
+      } catch {
+        setError(`Could not resolve username @${addressParam}`);
+        setLoading(false);
+      }
+    }
+
+    resolveUsername();
+  }, [addressParam]);
 
   useEffect(() => {
+    if (!resolvedAddress) return;
+
     async function fetchProfile() {
       setLoading(true);
       try {
-        // Try to derive PDA from the address (it could be a wallet address)
+        // Derive PDA from the resolved wallet address
         let profilePda: PublicKey;
         try {
-          const walletKey = new PublicKey(address);
+          const walletKey = new PublicKey(resolvedAddress!);
           [profilePda] = PublicKey.findProgramAddressSync(
             [Buffer.from("profile"), walletKey.toBuffer()],
             PROGRAM_ID
@@ -130,7 +170,7 @@ export default function ViewProfile() {
     }
 
     fetchProfile();
-  }, [address, connection]);
+  }, [resolvedAddress, connection]);
 
   // Check if we're following this profile
   useEffect(() => {
