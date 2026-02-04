@@ -8,6 +8,7 @@ export function Footer() {
         <p className="mt-1">
           <a href="/" className="text-[#3b5998] hover:underline">about</a> · 
           <a href="/profile" className="text-[#3b5998] hover:underline"> my profile</a> · 
+          <a href="/docs" className="text-[#3b5998] hover:underline"> docs</a> · 
           <a href="https://github.com/metasal1/clawbook" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline"> developers ↗</a>
         </p>
         <p className="mt-2 text-[9px]">
