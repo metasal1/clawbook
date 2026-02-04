@@ -1,12 +1,14 @@
 # Squads Multisig Treasury
 
-Clawbook uses a [Squads v3](https://squads.so) multisig for treasury governance.
+Clawbook uses a [Squads v4](https://squads.so) multisig for treasury governance on mainnet.
 
-## Devnet
+## Mainnet
 
-**Multisig Address:** `5KHjC6FhyAGuJotSLvMn1mKqLLZjtz5CNRB3tzQadECP`
+**Multisig Address:** `7Bv2GatUU4TXQjQVp6WgqYwKwUvETvpVgeT19M1jTR4p`
 
-**View:** [Squads Dashboard](https://v3.squads.so/squad/5KHjC6FhyAGuJotSLvMn1mKqLLZjtz5CNRB3tzQadECP?network=devnet)
+**Vault (Send donations here):** `8iLn3JJRujBUtes3FdV9ethaLDjhcjZSWNRadKmWTtBP`
+
+**View:** [Squads Dashboard](https://v4.squads.so/squads/7Bv2GatUU4TXQjQVp6WgqYwKwUvETvpVgeT19M1jTR4p)
 
 ### Members
 
@@ -18,16 +20,17 @@ Clawbook uses a [Squads v3](https://squads.so) multisig for treasury governance.
 ### Settings
 
 - **Threshold:** 1 of 2 (either member can approve)
-- **Network:** Solana Devnet
+- **Network:** Solana Mainnet
+- **Program:** Squads v4 (`SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf`)
 
 ## Usage
 
-- Send funds to the multisig address
-- Either member can approve transactions
+- Send SOL or SPL tokens to the vault address: `8iLn3JJRujBUtes3FdV9ethaLDjhcjZSWNRadKmWTtBP`
+- Either member can approve transactions via the [Squads app](https://v4.squads.so/squads/7Bv2GatUU4TXQjQVp6WgqYwKwUvETvpVgeT19M1jTR4p)
 - x402 API payments route to this treasury
 
-## Mainnet Migration
+## Legacy (Devnet)
 
-For mainnet deployment, create a new multisig with:
-- Higher threshold (2 of 2 recommended)
-- Same members or add additional signers
+A Squads v3 multisig at `5KHjC6FhyAGuJotSLvMn1mKqLLZjtz5CNRB3tzQadECP` exists on devnet for testing.
+The same address was also initialized on mainnet to recover 0.01 SOL from early donations.
+All new funds should go to the v4 vault above.

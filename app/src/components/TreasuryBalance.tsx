@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
-const TREASURY = new PublicKey("5KHjC6FhyAGuJotSLvMn1mKqLLZjtz5CNRB3tzQadECP");
+const MAINNET_VAULT = new PublicKey("8iLn3JJRujBUtes3FdV9ethaLDjhcjZSWNRadKmWTtBP");
+const MAINNET_MULTISIG = "7Bv2GatUU4TXQjQVp6WgqYwKwUvETvpVgeT19M1jTR4p";
 
 export function TreasuryBalance() {
-  const { connection } = useConnection();
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchBalance() {
       try {
-        const lamports = await connection.getBalance(TREASURY);
+        const mainnet = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
+        const lamports = await mainnet.getBalance(MAINNET_VAULT);
         setBalance(lamports / LAMPORTS_PER_SOL);
       } catch (e) {
         console.error("Error fetching treasury balance:", e);
@@ -26,16 +26,15 @@ export function TreasuryBalance() {
     fetchBalance();
     const interval = setInterval(fetchBalance, 30000);
     return () => clearInterval(interval);
-  }, [connection]);
+  }, []);
 
   return (
     <div className="text-xs">
-      <p className="text-gray-600 mb-1">Squads Multisig:</p>
+      <p className="text-gray-600 mb-1 font-bold">Squads v4 Multisig (Mainnet)</p>
       <code className="text-[9px] break-all text-[#3b5998]">
-        {TREASURY.toBase58()}
+        {MAINNET_VAULT.toBase58()}
       </code>
 
-      {/* Balance */}
       <div className="mt-2 bg-[#f0f4ff] border border-[#3b5998] rounded p-2 text-center">
         {loading ? (
           <div className="animate-pulse text-gray-400">...</div>
@@ -51,7 +50,7 @@ export function TreasuryBalance() {
 
       <div className="mt-2 space-y-1">
         <a
-          href={`https://explorer.solana.com/address/${TREASURY.toBase58()}?cluster=devnet`}
+          href={`https://explorer.solana.com/address/${MAINNET_VAULT.toBase58()}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#3b5998] hover:underline block"
@@ -59,7 +58,7 @@ export function TreasuryBalance() {
           » Explorer ↗
         </a>
         <a
-          href={`https://v3.squads.so/squad/${TREASURY.toBase58()}?network=devnet`}
+          href={`https://v4.squads.so/squads/${MAINNET_MULTISIG}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#3b5998] hover:underline block"
