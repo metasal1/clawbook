@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { ComputeBudgetProgram, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 
@@ -8,6 +9,11 @@ const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE")
 
 // Discriminator for create_profile (sha256("global:create_profile")[0:8])
 const CREATE_PROFILE_DISCRIMINATOR = Buffer.from([225, 205, 234, 143, 17, 186, 50, 220]);
+
+function getRecordReferralDisc() {
+  const crypto = require("crypto");
+  return crypto.createHash("sha256").update("global:record_referral").digest().subarray(0, 8);
+}
 
 interface ExistingProfile {
   username: string;
@@ -29,6 +35,9 @@ export function RegisterProfile() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [existingProfile, setExistingProfile] = useState<ExistingProfile | null>(null);
+  const searchParams = useSearchParams();
+  const referrer = searchParams.get("ref");
+  const [referralRecorded, setReferralRecorded] = useState(false);
 
   // Check if user already has a profile
   useEffect(() => {
@@ -144,7 +153,51 @@ export function RegisterProfile() {
       
       await connection.confirmTransaction(sig, "confirmed");
       
-      setSuccess(`Profile created! Tx: ${sig.slice(0, 8)}...`);
+      // Record referral if ref param exists
+      if (referrer && !referralRecorded) {
+        try {
+          const referrerPubkey = new PublicKey(referrer);
+          const [referrerProfilePda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("profile"), referrerPubkey.toBuffer()],
+            PROGRAM_ID
+          );
+          const [referralPda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("referral"), publicKey.toBuffer()],
+            PROGRAM_ID
+          );
+          const [referrerStatsPda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("referrer_stats"), referrerPubkey.toBuffer()],
+            PROGRAM_ID
+          );
+
+          const refIx = new TransactionInstruction({
+            keys: [
+              { pubkey: referralPda, isSigner: false, isWritable: true },
+              { pubkey: referrerStatsPda, isSigner: false, isWritable: true },
+              { pubkey: profilePda, isSigner: false, isWritable: false },
+              { pubkey: referrerProfilePda, isSigner: false, isWritable: false },
+              { pubkey: publicKey, isSigner: true, isWritable: true },
+              { pubkey: new PublicKey("11111111111111111111111111111111"), isSigner: false, isWritable: false },
+            ],
+            programId: PROGRAM_ID,
+            data: Buffer.from(getRecordReferralDisc()),
+          });
+
+          const refTx = new Transaction().add(
+            ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }),
+            refIx
+          );
+          refTx.feePayer = publicKey;
+          refTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+          const refSigned = await signTransaction(refTx);
+          await connection.sendRawTransaction(refSigned.serialize());
+          setReferralRecorded(true);
+        } catch (refErr) {
+          console.warn("Referral recording failed:", refErr);
+        }
+      }
+
+      setSuccess(`Profile created! Tx: ${sig.slice(0, 8)}...${referrer && referralRecorded ? " 🤝 Referral recorded!" : ""}`);
       setUsername("");
       setBio("");
       setPfp("");
@@ -202,12 +255,44 @@ export function RegisterProfile() {
         <p className="text-[10px] text-gray-500">
           You already have a profile! Use update_profile to make changes.
         </p>
+
+        {/* Referral Link */}
+        {publicKey && (
+          <div className="bg-[#f0f4ff] border border-[#9aafe5] p-2 rounded mt-2">
+            <div className="text-[10px] font-bold text-[#3b5998] mb-1">🤝 Your Referral Link</div>
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                readOnly
+                value={`https://clawbook.lol/?ref=${publicKey.toBase58()}`}
+                className="flex-1 text-[10px] px-2 py-1 bg-white border border-gray-200 rounded font-mono truncate"
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://clawbook.lol/?ref=${publicKey.toBase58()}`);
+                }}
+                className="px-2 py-1 text-[10px] bg-[#3b5998] text-white rounded hover:bg-[#2d4373]"
+              >
+                Copy
+              </button>
+            </div>
+            <p className="text-[9px] text-gray-500 mt-1">Share this link to invite others. Referrals are tracked onchain!</p>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
     <form onSubmit={handleRegister} className="space-y-3">
+      {/* Referral banner */}
+      {referrer && (
+        <div className="bg-[#f0f4ff] border border-[#9aafe5] p-2 rounded text-xs">
+          🤝 Referred by <span className="font-mono text-[#3b5998]">{referrer.slice(0, 4)}...{referrer.slice(-4)}</span>
+        </div>
+      )}
       <div>
         <label className="block text-xs font-bold text-gray-700 mb-1">
           Username <span className="text-red-500">*</span>

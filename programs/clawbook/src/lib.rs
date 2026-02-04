@@ -206,6 +206,21 @@ pub mod clawbook {
         Ok(())
     }
 
+    /// Record a referral — called after profile creation when user has a referral code.
+    /// Creates the referral link and increments referrer's stats.
+    pub fn record_referral(ctx: Context<RecordReferral>) -> Result<()> {
+        let referral = &mut ctx.accounts.referral;
+        referral.referred = ctx.accounts.authority.key();
+        referral.referrer = ctx.accounts.referrer_profile.authority;
+        referral.created_at = Clock::get()?.unix_timestamp;
+
+        let referrer_stats = &mut ctx.accounts.referrer_stats;
+        referrer_stats.authority = ctx.accounts.referrer_profile.authority;
+        referrer_stats.referral_count += 1;
+
+        Ok(())
+    }
+
     /// Update profile username, bio, and/or pfp
     pub fn update_profile(
         ctx: Context<UpdateProfile>,
@@ -285,6 +300,23 @@ pub struct Like {
     pub created_at: i64,            // 8 bytes
 }
 
+#[account]
+pub struct Referral {
+    pub referred: Pubkey,           // 32 bytes — who was referred
+    pub referrer: Pubkey,           // 32 bytes — who referred them
+    pub created_at: i64,            // 8 bytes
+}
+
+// Referral space: 8 + 32 + 32 + 8 = 80 bytes
+
+#[account]
+pub struct ReferrerStats {
+    pub authority: Pubkey,          // 32 bytes — the referrer
+    pub referral_count: u64,        // 8 bytes — total referrals
+}
+
+// ReferrerStats space: 8 + 32 + 8 = 48 bytes
+
 /// Compressed post stored via ZK Compression (Light Protocol).
 /// No rent required — stored as a hash in a state Merkle tree.
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize, LightDiscriminator)]
@@ -347,6 +379,37 @@ pub struct CreateCompressedPost<'info> {
         bump,
     )]
     pub profile: Account<'info, Profile>,
+}
+
+#[derive(Accounts)]
+pub struct RecordReferral<'info> {
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + 32 + 32 + 8, // 80 bytes
+        seeds = [b"referral", authority.key().as_ref()],
+        bump
+    )]
+    pub referral: Account<'info, Referral>,
+    #[account(
+        init_if_needed,
+        payer = authority,
+        space = 8 + 32 + 8, // 48 bytes
+        seeds = [b"referrer_stats", referrer_profile.authority.as_ref()],
+        bump
+    )]
+    pub referrer_stats: Account<'info, ReferrerStats>,
+    /// The referred user's profile — must exist
+    #[account(
+        seeds = [b"profile", authority.key().as_ref()],
+        bump
+    )]
+    pub profile: Account<'info, Profile>,
+    /// The referrer's profile — must exist
+    pub referrer_profile: Account<'info, Profile>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
