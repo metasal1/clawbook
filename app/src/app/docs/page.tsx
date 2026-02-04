@@ -13,6 +13,7 @@ const docs = [
   { slug: "api", title: "x402 API", desc: "REST API with USDC micropayments" },
   { slug: "frontend", title: "Frontend", desc: "Next.js web app — wallet connect, profiles, feed" },
   { slug: "zk-compression", title: "ZK Compression", desc: "Light Protocol compressed posts (200x cheaper)" },
+  { slug: "search-index", title: "Search Index", desc: "Turso database for fast search and filtering" },
   { slug: "multisig", title: "Multisig Treasury", desc: "Squads governance setup" },
   { slug: "deployment", title: "Deployment", desc: "Build, deploy, and run" },
   { slug: "changelog", title: "Changelog", desc: "Version history and notable changes" },
