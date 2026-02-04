@@ -32,6 +32,7 @@ export function Header() {
           <nav className="flex gap-2 sm:gap-4 text-[10px] sm:text-xs overflow-x-auto">
             <Link href="/" className={`text-white hover:underline ${pathname === "/" ? "font-bold underline" : ""}`}>home</Link>
             <Link href="/profile" className={`text-white hover:underline ${pathname === "/profile" ? "font-bold underline" : ""}`}>my profile</Link>
+            <Link href="/explore" className={`text-white hover:underline ${pathname === "/explore" ? "font-bold underline" : ""}`}>explore</Link>
             <Link href="/#stats" className="text-white hover:underline">stats</Link>
             <a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">api ↗</a>
           </nav>
