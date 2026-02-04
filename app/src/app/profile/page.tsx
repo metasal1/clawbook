@@ -42,6 +42,106 @@ function getCreatePostDisc() {
   return crypto.createHash("sha256").update("global:create_post").digest().subarray(0, 8);
 }
 
+function getCreateCompressedPostDisc() {
+  const crypto = require("crypto");
+  return crypto.createHash("sha256").update("global:create_compressed_post").digest().subarray(0, 8);
+}
+
+/**
+ * Build and send a compressed post transaction.
+ * Fetches proof from server-side API route, builds tx client-side.
+ */
+async function createCompressedPost(
+  publicKey: PublicKey,
+  signTransaction: (tx: Transaction) => Promise<Transaction>,
+  content: string,
+): Promise<string | null> {
+  // 1. Fetch proof + remaining accounts from API
+  const res = await fetch("/api/compressed-post", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ wallet: publicKey.toBase58(), content }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Compression API failed");
+  }
+
+  const data = await res.json();
+  const { proof, addressTreeInfo, outputTreeIndex, remainingAccounts, postCount } = data;
+
+  // 2. Build the instruction data
+  // ValidityProof: a(32) + b(64) + c(32) = 128 bytes
+  const proofA = Buffer.from(new Uint8Array(proof.a));
+  const proofB = Buffer.from(new Uint8Array(proof.b));
+  const proofC = Buffer.from(new Uint8Array(proof.c));
+
+  // PackedAddressTreeInfo: addressMerkleTreePubkeyIndex(u8) + addressQueuePubkeyIndex(u8) + rootIndex(u16)
+  const addressTreeInfoBuf = Buffer.alloc(4);
+  addressTreeInfoBuf.writeUInt8(addressTreeInfo.addressMerkleTreePubkeyIndex, 0);
+  addressTreeInfoBuf.writeUInt8(addressTreeInfo.addressQueuePubkeyIndex, 1);
+  addressTreeInfoBuf.writeUInt16LE(addressTreeInfo.rootIndex, 2);
+
+  // output_tree_index (u8)
+  const outputTreeBuf = Buffer.alloc(1);
+  outputTreeBuf.writeUInt8(outputTreeIndex, 0);
+
+  // content (borsh string: 4 byte len + utf8 bytes)
+  const contentBytes = Buffer.from(content, "utf-8");
+  const contentLenBuf = Buffer.alloc(4);
+  contentLenBuf.writeUInt32LE(contentBytes.length, 0);
+
+  const ixData = Buffer.concat([
+    getCreateCompressedPostDisc(),
+    proofA, proofB, proofC,
+    addressTreeInfoBuf,
+    outputTreeBuf,
+    contentLenBuf, contentBytes,
+  ]);
+
+  // 3. Build profile PDA
+  const [profilePda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("profile"), publicKey.toBuffer()],
+    PROGRAM_ID
+  );
+
+  // 4. Build remaining accounts
+  const remainingKeys = remainingAccounts.map((acc: { pubkey: string; isWritable: boolean; isSigner: boolean }) => ({
+    pubkey: new PublicKey(acc.pubkey),
+    isWritable: acc.isWritable,
+    isSigner: acc.isSigner,
+  }));
+
+  // 5. Build instruction
+  const ix = new TransactionInstruction({
+    keys: [
+      { pubkey: publicKey, isSigner: true, isWritable: true },   // fee_payer
+      { pubkey: profilePda, isSigner: false, isWritable: true },  // profile
+      ...remainingKeys,
+    ],
+    programId: PROGRAM_ID,
+    data: ixData,
+  });
+
+  // 6. Build and sign transaction
+  const connection = new (await import("@solana/web3.js")).Connection(
+    process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com"
+  );
+
+  const tx = new Transaction().add(
+    ComputeBudgetProgram.requestHeapFrame({ bytes: 262144 }),
+    ix
+  );
+  tx.feePayer = publicKey;
+  tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+  const signed = await signTransaction(tx);
+  const sig = await connection.sendRawTransaction(signed.serialize());
+  await connection.confirmTransaction(sig, "confirmed");
+
+  return sig;
+}
+
 export default function ProfilePage() {
   const { publicKey, signTransaction, connected } = useWallet();
   const { connection } = useConnection();
@@ -61,6 +161,8 @@ export default function ProfilePage() {
   const [postContent, setPostContent] = useState("");
   const [posting, setPosting] = useState(false);
   const [postSuccess, setPostSuccess] = useState<string | null>(null);
+  const [useCompression, setUseCompression] = useState(true);
+  const [lastPostCompressed, setLastPostCompressed] = useState(false);
 
   // Create profile
   const [newUsername, setNewUsername] = useState("");
@@ -273,7 +375,26 @@ export default function ProfilePage() {
     setPosting(true);
     setError(null);
     setPostSuccess(null);
+    setLastPostCompressed(false);
 
+    // Try compressed post first if enabled
+    if (useCompression) {
+      try {
+        const compressedResult = await createCompressedPost(publicKey, signTransaction, postContent);
+        if (compressedResult) {
+          setPostContent("");
+          setLastPostCompressed(true);
+          setPostSuccess(`⚡ Compressed post! Tx: ${compressedResult.slice(0, 12)}...`);
+          await fetchProfile();
+          setPosting(false);
+          return;
+        }
+      } catch (compErr) {
+        console.warn("Compressed post failed, falling back to regular:", compErr);
+      }
+    }
+
+    // Fallback to regular post
     try {
       const [profilePda] = PublicKey.findProgramAddressSync(
         [Buffer.from("profile"), publicKey.toBuffer()],
@@ -545,7 +666,21 @@ export default function ProfilePage() {
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:border-[#3b5998] focus:outline-none resize-none"
                   />
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-gray-500">{postContent.length}/280</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-gray-500">{postContent.length}/280</span>
+                      <button
+                        type="button"
+                        onClick={() => setUseCompression(!useCompression)}
+                        className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
+                          useCompression
+                            ? "bg-purple-100 border-purple-400 text-purple-700"
+                            : "bg-gray-100 border-gray-300 text-gray-500"
+                        }`}
+                        title={useCompression ? "ZK Compression ON — rent-free posts" : "ZK Compression OFF — regular PDA posts"}
+                      >
+                        ⚡ {useCompression ? "Compressed" : "Regular"}
+                      </button>
+                    </div>
                     <button
                       type="submit"
                       disabled={posting || !postContent.trim()}
@@ -555,8 +690,9 @@ export default function ProfilePage() {
                     </button>
                   </div>
                   {postSuccess && (
-                    <div className="bg-[#d9ffce] border border-[#8fbc8f] p-2 rounded text-xs text-green-700">
-                      ✅ {postSuccess}
+                    <div className={`${lastPostCompressed ? "bg-purple-50 border-purple-300" : "bg-[#d9ffce] border-[#8fbc8f]"} border p-2 rounded text-xs ${lastPostCompressed ? "text-purple-700" : "text-green-700"}`}>
+                      {lastPostCompressed ? "⚡" : "✅"} {postSuccess}
+                      {lastPostCompressed && <span className="block text-[9px] mt-0.5 opacity-75">Rent-free via ZK Compression (Light Protocol)</span>}
                     </div>
                   )}
                 </form>

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@lightprotocol/stateless.js": "^0.22.0",
     "@onsol/tldparser": "^1.2.1",
     "@solana/connector": "^0.2.4",
     "@solana/wallet-adapter-base": "^0.9.27",
