@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 
 export function Faucet() {
   const { publicKey } = useWallet();
   const [loading, setLoading] = useState(false);
+  const [faucetBalance, setFaucetBalance] = useState<number | null>(null);
   const [result, setResult] = useState<{
     success?: boolean;
     error?: string;
@@ -13,6 +14,22 @@ export function Faucet() {
     explorer?: string;
   } | null>(null);
   const [manualWallet, setManualWallet] = useState("");
+
+  // Fetch faucet balance
+  useEffect(() => {
+    async function fetchBalance() {
+      try {
+        const res = await fetch("/api/faucet");
+        const data = await res.json();
+        if (data.balance !== undefined) {
+          setFaucetBalance(data.balance);
+        }
+      } catch {}
+    }
+    fetchBalance();
+    const interval = setInterval(fetchBalance, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const requestAirdrop = async () => {
     const wallet = publicKey?.toBase58() || manualWallet.trim();
@@ -38,6 +55,10 @@ export function Faucet() {
           signature: json.signature,
           explorer: json.explorer,
         });
+        // Update balance after drip
+        if (faucetBalance !== null) {
+          setFaucetBalance(Math.max(0, faucetBalance - 1));
+        }
       } else {
         setResult({ error: json.error || "Request failed" });
       }
@@ -50,13 +71,32 @@ export function Faucet() {
 
   return (
     <div className="bg-white border border-[#9aafe5] rounded">
-      <div className="bg-[#d3dce8] px-3 py-2 border-b border-[#9aafe5] flex items-center justify-between cursor-pointer">
+      <div className="bg-[#d3dce8] px-3 py-2 border-b border-[#9aafe5] flex items-center justify-between">
         <h2 className="text-sm font-bold text-[#3b5998]">🚰 Devnet Faucet</h2>
+        {faucetBalance !== null && (
+          <span className="text-[10px] font-mono text-gray-600">
+            {faucetBalance.toFixed(2)} SOL left
+          </span>
+        )}
       </div>
       <div className="p-3">
         <p className="text-xs text-gray-600 mb-2">
           Get 1 SOL on devnet to create your profile and start posting. One drip per day.
         </p>
+
+        {/* Balance bar */}
+        {faucetBalance !== null && (
+          <div className="mb-2">
+            <div className="w-full bg-gray-200 rounded-full h-1.5">
+              <div
+                className={`h-1.5 rounded-full transition-all ${
+                  faucetBalance > 5 ? "bg-green-500" : faucetBalance > 1 ? "bg-yellow-500" : "bg-red-500"
+                }`}
+                style={{ width: `${Math.min(100, (faucetBalance / 20) * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {!publicKey && (
           <input
@@ -76,14 +116,18 @@ export function Faucet() {
 
         <button
           onClick={requestAirdrop}
-          disabled={loading}
+          disabled={loading || (faucetBalance !== null && faucetBalance < 1)}
           className={`w-full px-3 py-2 rounded text-sm font-bold transition-colors ${
-            loading
+            loading || (faucetBalance !== null && faucetBalance < 1)
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
               : "bg-[#3b5998] text-white hover:bg-[#2d4373] cursor-pointer"
           }`}
         >
-          {loading ? "Sending..." : "💧 Request 1 SOL"}
+          {loading
+            ? "Sending..."
+            : faucetBalance !== null && faucetBalance < 1
+            ? "🚰 Faucet Empty"
+            : "💧 Request 1 SOL"}
         </button>
 
         {result && (
