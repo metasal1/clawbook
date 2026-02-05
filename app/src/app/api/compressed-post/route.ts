@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     const staticAccounts = defaultStaticAccountsStruct();
 
     // Derive address seed for the compressed post
-    // Must match on-chain: seeds = [b"compressed_post", fee_payer, post_count_bytes]
+    // Must match onchain: seeds = [b"compressed_post", fee_payer, post_count_bytes]
     const postCountBytes = Buffer.alloc(8);
     postCountBytes.writeBigUInt64LE(BigInt(postCount));
 

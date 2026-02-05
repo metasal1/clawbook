@@ -710,7 +710,7 @@ export default function ProfilePage() {
                     <span className="text-lg">📝</span>
                     <div>
                       <div className="font-bold">{profile.postCount} Posts</div>
-                      <div className="text-[10px] text-gray-500">Total posts created on-chain</div>
+                      <div className="text-[10px] text-gray-500">Total posts created onchain</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
