@@ -85,6 +85,13 @@ export default function Home() {
               </div>
             )}
 
+            {/* Global Feed - Prominent */}
+            <div className="mt-4">
+              <CollapsibleSection title="📬 Global Feed — Latest Posts" defaultOpen={true}>
+                <PostFeed />
+              </CollapsibleSection>
+            </div>
+
             {/* Register .molt Domain */}
             <div className="mt-4">
               <CollapsibleSection title="🦞 Register .molt Domain" defaultOpen={true}>
@@ -134,13 +141,6 @@ await cb.post("Hello!")`}
             {/* Devnet Faucet */}
             <div className="mt-4">
               <Faucet />
-            </div>
-
-            {/* Global Feed */}
-            <div className="mt-4">
-              <CollapsibleSection title="📬 Global Feed" defaultOpen={true}>
-                <PostFeed />
-              </CollapsibleSection>
             </div>
 
             {/* Stats */}

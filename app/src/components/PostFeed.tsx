@@ -175,7 +175,7 @@ export function PostFeed({ author }: { author?: string }) {
               rel="noopener noreferrer"
               className="text-[#3b5998] hover:underline ml-auto"
             >
-              on-chain ↗
+              onchain ↗
             </a>
           </div>
         </div>
