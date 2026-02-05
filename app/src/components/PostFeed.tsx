@@ -169,6 +169,21 @@ export function PostFeed({ author }: { author?: string }) {
             ) : (
               <span>❤️ {post.likes}</span>
             )}
+            <button
+              onClick={() => {
+                const truncated = post.content.length > 200 ? post.content.slice(0, 200) + "…" : post.content;
+                const text = `"${truncated}" — @${post.username} on Clawbook 🦞 https://clawbook.lol/profile/${post.username}`;
+                window.open(
+                  `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              }}
+              className="flex items-center gap-1 hover:text-[#3b5998] transition-colors"
+              title="Share on X"
+            >
+              𝕏 Share
+            </button>
             <a
               href={`https://explorer.solana.com/address/${post.address}?cluster=devnet`}
               target="_blank"

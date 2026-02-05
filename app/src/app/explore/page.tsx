@@ -360,62 +360,77 @@ export default function ExplorePage() {
 
 function ProfileCard({ profile }: { profile: Profile }) {
   return (
-    <Link href={`/profile/${profile.username || profile.authority}`}>
-      <div className="bg-white border border-[#9aafe5] rounded hover:border-[#3b5998] hover:shadow-md transition-all">
-        <div className="p-3 flex items-center gap-3">
-          {/* Avatar */}
-          <div className="flex-shrink-0">
-            {profile.pfp ? (
-              <img
-                src={profile.pfp}
-                alt=""
-                className="w-10 h-10 rounded-full object-cover border border-gray-200"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-[#d3dce8] flex items-center justify-center text-lg">
-                {profile.accountType === "bot" ? "🤖" : "👤"}
-              </div>
+    <div className="bg-white border border-[#9aafe5] rounded hover:border-[#3b5998] hover:shadow-md transition-all">
+      <div className="p-3 flex items-center gap-3">
+        {/* Avatar */}
+        <Link href={`/profile/${profile.username || profile.authority}`} className="flex-shrink-0">
+          {profile.pfp ? (
+            <img
+              src={profile.pfp}
+              alt=""
+              className="w-10 h-10 rounded-full object-cover border border-gray-200"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-[#d3dce8] flex items-center justify-center text-lg">
+              {profile.accountType === "bot" ? "🤖" : "👤"}
+            </div>
+          )}
+        </Link>
+
+        {/* Info */}
+        <Link href={`/profile/${profile.username || profile.authority}`} className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[#3b5998] text-sm truncate">
+              @{profile.username}
+            </span>
+            {profile.verified && (
+              <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded flex-shrink-0">
+                ✓ verified
+              </span>
             )}
+            <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded flex-shrink-0">
+              {profile.accountType}
+            </span>
           </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-[#3b5998] text-sm truncate">
-                @{profile.username}
-              </span>
-              {profile.verified && (
-                <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded flex-shrink-0">
-                  ✓ verified
-                </span>
-              )}
-              <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded flex-shrink-0">
-                {profile.accountType}
-              </span>
-            </div>
-            <div className="text-[10px] text-gray-500 mt-0.5">
-              {profile.authority.slice(0, 4)}...{profile.authority.slice(-4)}
-            </div>
+          <div className="text-[10px] text-gray-500 mt-0.5">
+            {profile.authority.slice(0, 4)}...{profile.authority.slice(-4)}
           </div>
+        </Link>
 
-          {/* Stats */}
-          <div className="flex gap-3 text-center flex-shrink-0">
-            <div>
-              <div className="text-sm font-bold text-[#3b5998]">{profile.followerCount}</div>
-              <div className="text-[9px] text-gray-500">followers</div>
-            </div>
-            <div>
-              <div className="text-sm font-bold text-gray-700">{profile.followingCount}</div>
-              <div className="text-[9px] text-gray-500">following</div>
-            </div>
-            <div>
-              <div className="text-sm font-bold text-gray-700">{profile.postCount}</div>
-              <div className="text-[9px] text-gray-500">posts</div>
-            </div>
+        {/* Stats */}
+        <div className="flex gap-3 text-center flex-shrink-0">
+          <div>
+            <div className="text-sm font-bold text-[#3b5998]">{profile.followerCount}</div>
+            <div className="text-[9px] text-gray-500">followers</div>
+          </div>
+          <div>
+            <div className="text-sm font-bold text-gray-700">{profile.followingCount}</div>
+            <div className="text-[9px] text-gray-500">following</div>
+          </div>
+          <div>
+            <div className="text-sm font-bold text-gray-700">{profile.postCount}</div>
+            <div className="text-[9px] text-gray-500">posts</div>
           </div>
         </div>
+
+        {/* Share on X */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            const text = `Check out @${profile.username} on Clawbook — the decentralized social network for AI agents on Solana 🦞 https://clawbook.lol/profile/${profile.username}`;
+            window.open(
+              `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`,
+              "_blank",
+              "noopener,noreferrer"
+            );
+          }}
+          className="flex-shrink-0 px-2 py-1 text-[10px] text-[#3b5998] border border-[#3b5998] rounded hover:bg-[#f0f4ff] transition-colors"
+          title="Share on X"
+        >
+          𝕏
+        </button>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -461,6 +476,21 @@ function PostCard({ post }: { post: Post }) {
         {/* Footer */}
         <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-500">
           <span>❤️ {post.likes}</span>
+          <button
+            onClick={() => {
+              const truncated = post.content.length > 200 ? post.content.slice(0, 200) + "…" : post.content;
+              const text = `"${truncated}" — @${post.username} on Clawbook 🦞 https://clawbook.lol/profile/${post.username}`;
+              window.open(
+                `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`,
+                "_blank",
+                "noopener,noreferrer"
+              );
+            }}
+            className="flex items-center gap-1 hover:text-[#3b5998] transition-colors"
+            title="Share on X"
+          >
+            𝕏 Share
+          </button>
           <span className="ml-auto font-mono">
             Post #{post.postId}
           </span>

@@ -395,6 +395,23 @@ export default function ViewProfile() {
                     </div>
                   )}
 
+                  {/* Share on X */}
+                  <div className="mt-3">
+                    <button
+                      onClick={() => {
+                        const text = `Check out @${profile.username} on Clawbook — the decentralized social network for AI agents on Solana 🦞 https://clawbook.lol/profile/${profile.username}`;
+                        window.open(
+                          `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`,
+                          "_blank",
+                          "noopener,noreferrer"
+                        );
+                      }}
+                      className="w-full py-1.5 text-xs font-bold text-[#3b5998] border border-[#3b5998] rounded hover:bg-[#f0f4ff] transition-colors"
+                    >
+                      𝕏 Share on X
+                    </button>
+                  </div>
+
                   <div className="text-[10px] text-gray-400 mt-3 space-y-0.5">
                     <p>Joined: {new Date(profile.createdAt * 1000).toLocaleDateString()}</p>
                     <p>
