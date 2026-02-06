@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::{program::invoke, system_instruction};
 use borsh::{BorshDeserialize, BorshSerialize};
 use light_sdk::{
     account::LightAccount,
@@ -9,7 +10,7 @@ use light_sdk::{
     CpiSigner, LightDiscriminator, PackedAddressTreeInfoExt,
 };
 
-declare_id!("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
+declare_id!("12QGhHA9beYgva6a3XHhQQZrXpPcZVuPNvyeBKgRejsq");
 
 /// CPI signer for Light Protocol compressed account operations.
 pub const LIGHT_CPI_SIGNER: CpiSigner =
@@ -243,6 +244,96 @@ pub mod clawbook {
         if let Some(new_pfp) = pfp {
             require!(new_pfp.len() <= 128, ClawbookError::PfpTooLong);
             profile.pfp = new_pfp;
+        }
+
+        Ok(())
+    }
+
+    /// Migrate old profile (v2, 402 bytes, no pfp field) to new format (v3, 534 bytes, with pfp).
+    /// Old profiles cause OOM when deserialized with the new schema because byte offsets shift.
+    /// This instruction reads raw bytes, reallocs, and inserts an empty pfp field.
+    /// Safe to call on already-migrated profiles (no-op).
+    pub fn migrate_profile(ctx: Context<MigrateProfile>) -> Result<()> {
+        let profile_ai = ctx.accounts.profile.to_account_info();
+        let old_size = profile_ai.data_len();
+
+        // Already new format — nothing to do
+        if old_size >= 534 {
+            return Ok(());
+        }
+
+        // Only handle known old format (402 bytes)
+        require!(old_size == 402, ClawbookError::InvalidProfile);
+
+        // --- 1. Read old data and find insert point ---
+        let old_data = profile_ai.try_borrow_data()?.to_vec();
+
+        // Old layout after 8-byte discriminator:
+        //   authority(32) + username(4+N) + bio(4+M) + account_type(1) +
+        //   bot_proof_hash(32) + verified(1) + post_count(8) +
+        //   follower_count(8) + following_count(8) + created_at(8)
+        // We insert pfp(4+0) between bio and account_type.
+
+        let mut cursor: usize = 8 + 32; // skip discriminator + authority
+
+        // Skip username (borsh string: 4-byte len prefix + data)
+        let uname_len = u32::from_le_bytes(
+            old_data[cursor..cursor + 4].try_into().unwrap(),
+        ) as usize;
+        cursor += 4 + uname_len;
+
+        // Skip bio
+        let bio_len = u32::from_le_bytes(
+            old_data[cursor..cursor + 4].try_into().unwrap(),
+        ) as usize;
+        cursor += 4 + bio_len;
+
+        let insert_point = cursor;
+
+        // Remaining serialized fields: 1 + 32 + 1 + 8 + 8 + 8 + 8 = 66 bytes
+        // (account_type + bot_proof_hash + verified + post_count + follower + following + created_at)
+        const TAIL_LEN: usize = 1 + 32 + 1 + 8 + 8 + 8 + 8; // 66
+        let tail = old_data[insert_point..insert_point + TAIL_LEN].to_vec();
+
+        // Release borrow before realloc
+        drop(old_data);
+
+        // --- 2. Transfer additional rent for the larger account ---
+        let new_size: usize = 534;
+        let rent = Rent::get()?;
+        let new_min_balance = rent.minimum_balance(new_size);
+        let current_lamports = profile_ai.lamports();
+
+        if new_min_balance > current_lamports {
+            let diff = new_min_balance - current_lamports;
+            invoke(
+                &system_instruction::transfer(
+                    ctx.accounts.authority.key,
+                    profile_ai.key,
+                    diff,
+                ),
+                &[
+                    ctx.accounts.authority.to_account_info(),
+                    profile_ai.clone(),
+                    ctx.accounts.system_program.to_account_info(),
+                ],
+            )?;
+        }
+
+        // --- 3. Resize and rewrite data ---
+        profile_ai.resize(new_size)?;
+
+        let mut data = profile_ai.try_borrow_mut_data()?;
+
+        // Insert empty pfp string: length prefix = 0 (4 bytes)
+        data[insert_point..insert_point + 4].copy_from_slice(&0u32.to_le_bytes());
+
+        // Write tail (account_type through created_at) right after pfp
+        data[insert_point + 4..insert_point + 4 + TAIL_LEN].copy_from_slice(&tail);
+
+        // Zero-fill any remaining bytes
+        for byte in data[insert_point + 4 + TAIL_LEN..new_size].iter_mut() {
+            *byte = 0;
         }
 
         Ok(())
@@ -515,6 +606,22 @@ pub struct UpdateProfile<'info> {
     pub authority: Signer<'info>,
 }
 
+#[derive(Accounts)]
+pub struct MigrateProfile<'info> {
+    /// CHECK: Read raw bytes — account may be in old format (402 bytes, no pfp field)
+    /// that cannot be deserialized as the current Profile struct.
+    /// PDA seeds verify it's a valid profile address.
+    #[account(
+        mut,
+        seeds = [b"profile", authority.key().as_ref()],
+        bump
+    )]
+    pub profile: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
 // === Errors ===
 
 #[error_code]
@@ -531,4 +638,6 @@ pub enum ClawbookError {
     InvalidBotProof,
     #[msg("Light Protocol CPI error")]
     LightCpiError,
+    #[msg("Invalid profile format — expected 402-byte old format for migration")]
+    InvalidProfile,
 }
