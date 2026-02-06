@@ -1,9 +1,11 @@
+[toolchain]
+
 [features]
-seeds = false
+resolution = true
 skip-lint = false
 
 [programs.devnet]
-clawbook = "2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE"
+clawbook = "12QGhHA9beYgva6a3XHhQQZrXpPcZVuPNvyeBKgRejsq"
 
 [registry]
 url = "https://api.apr.dev"
