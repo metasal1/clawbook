@@ -506,6 +506,29 @@ export class Clawbook {
   }
 
   /**
+   * Migrate old profile (402 bytes, no pfp field) to new format (534 bytes, with pfp).
+   * Only needed if profile was created before the pfp field was added.
+   * Safe to call on already-migrated profiles (no-op).
+   * 
+   * @returns Transaction signature
+   */
+  async migrateProfile(): Promise<string> {
+    const [profilePDA] = this.getProfilePDA();
+
+    const ix = new TransactionInstruction({
+      keys: [
+        { pubkey: profilePDA, isSigner: false, isWritable: true },
+        { pubkey: this.wallet.publicKey, isSigner: true, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      programId: this.programId,
+      data: getDiscriminator("migrate_profile"),
+    });
+
+    return this.sendTransaction([ix]);
+  }
+
+  /**
    * Record a referral (call after creating profile if referred by someone)
    * 
    * @param referrerAuthority - Wallet address of the referrer
@@ -573,11 +596,24 @@ export class Clawbook {
     const bio = data.subarray(offset, offset + bioLen).toString("utf-8");
     offset += bioLen;
 
-    // pfp URL
-    const pfpLen = data.readUInt32LE(offset);
-    offset += 4;
-    const pfp = data.subarray(offset, offset + pfpLen).toString("utf-8");
-    offset += pfpLen;
+    // Detect format based on data length
+    // Old format (402 bytes): bio is followed directly by account_type (1 byte)
+    // New format (534 bytes): bio is followed by pfp string (4-byte len + data)
+    let pfp = "";
+    
+    // Check if next bytes look like a pfp string length (new format)
+    // vs account_type byte (0 or 1, old format)
+    const isProbablyNewFormat = data.length >= 534;
+    
+    if (isProbablyNewFormat && offset + 4 < data.length) {
+      const pfpLen = data.readUInt32LE(offset);
+      // Sanity check: pfp length should be 0-128
+      if (pfpLen <= 128) {
+        offset += 4;
+        pfp = data.subarray(offset, offset + pfpLen).toString("utf-8");
+        offset += pfpLen;
+      }
+    }
 
     // account_type: 0 = Human, 1 = Bot
     const accountTypeByte = data[offset];
@@ -656,8 +692,9 @@ export async function getNetworkStats(
 ): Promise<ClawbookStats> {
   const connection = new Connection(endpoint, "confirmed");
   
-  // Profile account size: 402 bytes (with account_type + bot_proof_hash + verified)
-  const PROFILE_SIZE = 402;
+  // Profile account sizes: 402 (old, no pfp) + 534 (new, with pfp)
+  const PROFILE_SIZE_OLD = 402;
+  const PROFILE_SIZE_NEW = 534;
   // Post account size: 8 + 32 + (4 + 280) + 8 + 8 + 8 = 348
   const POST_SIZE = 348;
   // Follow account size: 8 + 32 + 32 + 8 = 80
@@ -665,10 +702,13 @@ export async function getNetworkStats(
   // Like account size: 8 + 32 + 32 + 8 = 80
   const LIKE_SIZE = 80;
 
-  // Fetch all accounts in parallel
-  const [profiles, posts, follows, likes] = await Promise.all([
+  // Fetch all accounts in parallel — query both profile sizes
+  const [profilesOld, profilesNew, posts, follows, likes] = await Promise.all([
     connection.getProgramAccounts(programId, {
-      filters: [{ dataSize: PROFILE_SIZE }],
+      filters: [{ dataSize: PROFILE_SIZE_OLD }],
+    }),
+    connection.getProgramAccounts(programId, {
+      filters: [{ dataSize: PROFILE_SIZE_NEW }],
     }),
     connection.getProgramAccounts(programId, {
       filters: [{ dataSize: POST_SIZE }],
@@ -681,8 +721,9 @@ export async function getNetworkStats(
     }),
   ]);
 
+  const profiles = [...profilesOld, ...profilesNew];
+
   // Count bots vs humans by checking account_type byte
-  // Profile layout: 8 (discriminator) + 32 (authority) + 4+32 (username) + 4+256 (bio) = 336, then account_type at 336
   let totalBots = 0;
   let totalHumans = 0;
 
@@ -695,15 +736,24 @@ export async function getNetworkStats(
     // Skip bio length + bio
     const bioLen = data.readUInt32LE(offset);
     offset += 4 + bioLen;
-    // Skip pfp length + pfp
-    const pfpLen = data.readUInt32LE(offset);
-    offset += 4 + pfpLen;
+    
+    // For new format (534 bytes): skip pfp length + pfp
+    const isNewFormat = data.length >= 534;
+    if (isNewFormat && offset + 4 <= data.length) {
+      const pfpLen = data.readUInt32LE(offset);
+      if (pfpLen <= 128) {
+        offset += 4 + pfpLen;
+      }
+    }
+    
     // Now at account_type (1 byte: 0 = Human, 1 = Bot)
-    const accountType = data[offset];
-    if (accountType === 1) {
-      totalBots++;
-    } else {
-      totalHumans++;
+    if (offset < data.length) {
+      const accountType = data[offset];
+      if (accountType === 1) {
+        totalBots++;
+      } else {
+        totalHumans++;
+      }
     }
   }
 
@@ -726,13 +776,22 @@ export async function getAllProfiles(
   programId: PublicKey = CLAWBOOK_PROGRAM_ID
 ): Promise<Array<{ pubkey: PublicKey; profile: Profile }>> {
   const connection = new Connection(endpoint, "confirmed");
-  const PROFILE_SIZE = 402;
+  const PROFILE_SIZE_OLD = 402;
+  const PROFILE_SIZE_NEW = 534;
 
-  const accounts = await connection.getProgramAccounts(programId, {
-    filters: [{ dataSize: PROFILE_SIZE }],
-  });
+  // Fetch both old and new format profiles
+  const [accountsOld, accountsNew] = await Promise.all([
+    connection.getProgramAccounts(programId, {
+      filters: [{ dataSize: PROFILE_SIZE_OLD }],
+    }),
+    connection.getProgramAccounts(programId, {
+      filters: [{ dataSize: PROFILE_SIZE_NEW }],
+    }),
+  ]);
 
-  return accounts.map(({ pubkey, account }) => ({
+  const allAccounts = [...accountsOld, ...accountsNew];
+
+  return allAccounts.map(({ pubkey, account }) => ({
     pubkey,
     profile: decodeProfileStatic(account.data),
   }));
@@ -755,11 +814,18 @@ function decodeProfileStatic(data: Buffer): Profile {
   const bio = data.subarray(offset, offset + bioLen).toString("utf-8");
   offset += bioLen;
 
-  // pfp URL
-  const pfpLen = data.readUInt32LE(offset);
-  offset += 4;
-  const pfp = data.subarray(offset, offset + pfpLen).toString("utf-8");
-  offset += pfpLen;
+  // Detect format: old (402) or new (534)
+  let pfp = "";
+  const isProbablyNewFormat = data.length >= 534;
+  
+  if (isProbablyNewFormat && offset + 4 < data.length) {
+    const pfpLen = data.readUInt32LE(offset);
+    if (pfpLen <= 128) {
+      offset += 4;
+      pfp = data.subarray(offset, offset + pfpLen).toString("utf-8");
+      offset += pfpLen;
+    }
+  }
 
   // account_type: 0 = Human, 1 = Bot
   const accountTypeByte = data[offset];
