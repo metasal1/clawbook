@@ -10,7 +10,7 @@ use light_sdk::{
     CpiSigner, LightDiscriminator, PackedAddressTreeInfoExt,
 };
 
-declare_id!("12QGhHA9beYgva6a3XHhQQZrXpPcZVuPNvyeBKgRejsq");
+declare_id!("4mJAo1V6oTFXTTc8Q18gY9HRWKVy3py8DxZnGCTUJU9R");
 
 /// CPI signer for Light Protocol compressed account operations.
 pub const LIGHT_CPI_SIGNER: CpiSigner =
