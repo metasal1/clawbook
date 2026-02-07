@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import Link from "next/link";
@@ -15,15 +15,37 @@ export default function DomainsPage() {
     price?: any;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [registeredDomains, setRegisteredDomains] = useState<string[]>([]);
+  const [loadingDomains, setLoadingDomains] = useState(true);
 
-  async function searchDomain() {
-    if (!domainName.trim()) return;
+  useEffect(() => {
+    async function fetchDomains() {
+      try {
+        const res = await fetch("/api/molt-domains");
+        const data = await res.json();
+        if (data.success && data.domains) {
+          // Reverse to show newest first (assuming newer ones are added at end)
+          setRegisteredDomains(data.domains.reverse());
+        }
+      } catch (e) {
+        console.error("Failed to fetch domains:", e);
+      } finally {
+        setLoadingDomains(false);
+      }
+    }
+    fetchDomains();
+  }, []);
+
+  async function searchDomain(name?: string) {
+    const searchName = name || domainName.trim();
+    if (!searchName) return;
     setSearching(true);
     setError(null);
     setResult(null);
+    if (name) setDomainName(name.replace(".molt", ""));
 
     try {
-      const res = await fetch(`/api/domain/lookup?domain=${encodeURIComponent(domainName.trim().toLowerCase())}`);
+      const res = await fetch(`/api/domain/lookup?domain=${encodeURIComponent(searchName.toLowerCase())}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setResult(data);
@@ -70,7 +92,7 @@ export default function DomainsPage() {
                 placeholder="Enter domain name"
                 maxLength={32}
                 className="w-full px-3 py-2 text-lg border border-gray-300 rounded-l focus:border-[#ff6b35] focus:outline-none"
-                onKeyDown={(e) => e.key === "Enter" && searchDomain()}
+                onKeyDown={(e) => { if (e.key === "Enter") searchDomain(); }}
                 autoFocus
               />
             </div>
@@ -79,7 +101,7 @@ export default function DomainsPage() {
             </span>
           </div>
           <button
-            onClick={searchDomain}
+            onClick={() => searchDomain()}
             disabled={searching || !domainName.trim()}
             className="w-full mt-3 px-4 py-2 text-lg font-bold text-white bg-[#ff6b35] rounded hover:bg-[#e55a25] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
@@ -150,6 +172,37 @@ export default function DomainsPage() {
             <span className="text-red-700">⚠️ {error}</span>
           </div>
         )}
+
+        {/* Registered Domains */}
+        <div className="bg-white border border-[#9aafe5] mb-6">
+          <div className="bg-[#6d84b4] px-4 py-2">
+            <h2 className="text-white font-bold">🦞 Registered .molt Domains</h2>
+          </div>
+          <div className="p-4">
+            {loadingDomains ? (
+              <div className="text-center text-gray-500 py-4">Loading...</div>
+            ) : registeredDomains.length === 0 ? (
+              <div className="text-center text-gray-500 py-4">No domains registered yet</div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+                  {registeredDomains.slice(0, 12).map((domain) => (
+                    <button
+                      key={domain}
+                      onClick={() => searchDomain(domain)}
+                      className="text-left px-3 py-2 bg-[#fff0e0] border border-[#ff6b35] rounded text-sm text-[#ff6b35] hover:bg-[#ffe4d0] transition-colors truncate"
+                    >
+                      {domain}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-xs text-gray-500 text-center">
+                  {registeredDomains.length} domains registered
+                </div>
+              </>
+            )}
+          </div>
+        </div>
 
         {/* Info */}
         <div className="bg-white border border-[#9aafe5] p-4 text-xs text-gray-600">
