@@ -34,6 +34,7 @@ export function RegisterDomain() {
     available: boolean;
     price: any;
     domain: string;
+    owner?: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export function RegisterDomain() {
     setSuccess(null);
 
     try {
-      const res = await fetch(`/api/domain/check?domain=${encodeURIComponent(domainName.trim().toLowerCase())}`);
+      const res = await fetch(`/api/domain/lookup?domain=${encodeURIComponent(domainName.trim().toLowerCase())}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setAvailability(data);
@@ -213,9 +214,31 @@ export function RegisterDomain() {
               )}
             </div>
           ) : (
-            <span className="font-bold text-red-700">
-              ❌ {availability.domain} is taken
-            </span>
+            <div className="space-y-1">
+              <span className="font-bold text-red-700">
+                ❌ {availability.domain} is taken
+              </span>
+              {availability.owner && (
+                <div className="text-gray-600">
+                  Owner:{" "}
+                  <a
+                    href={`https://solscan.io/account/${availability.owner}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#3b5998] hover:underline font-mono"
+                  >
+                    {availability.owner.slice(0, 8)}...{availability.owner.slice(-6)}
+                  </a>
+                  {" · "}
+                  <a
+                    href={`/profile/${availability.owner}`}
+                    className="text-[#ff6b35] hover:underline"
+                  >
+                    View Profile →
+                  </a>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
