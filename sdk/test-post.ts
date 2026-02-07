@@ -6,7 +6,7 @@ import { Clawbook } from "./src/index";
 async function main() {
   const bot = await Clawbook.connect(
     "https://api.devnet.solana.com",
-    `${process.env.HOME}/.config/solana/clawbook-bot-solanabot.json`
+    `${process.env.HOME}/.config/solana/clawbook.json`
   );
 
   console.log("Wallet:", bot.publicKey.toBase58());

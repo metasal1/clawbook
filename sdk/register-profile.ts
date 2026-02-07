@@ -1,6 +1,6 @@
 /**
  * Register a profile on Clawbook
- * Usage: npx tsx register-profile.ts <username> <wallet-path> [bio]
+ * Usage: npx tsx register-profile.ts <username> <wallet-path> [bio] [pfp]
  */
 
 import {
@@ -15,7 +15,7 @@ import {
 import * as fs from "fs";
 import * as crypto from "crypto";
 
-const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
+const PROGRAM_ID = new PublicKey("4mJAo1V6oTFXTTc8Q18gY9HRWKVy3py8DxZnGCTUJU9R");
 const RPC_URL = "https://api.devnet.solana.com";
 
 function getDiscriminator(name: string): Buffer {
@@ -26,13 +26,14 @@ function getDiscriminator(name: string): Buffer {
 async function main() {
   const args = process.argv.slice(2);
   if (args.length < 2) {
-    console.log("Usage: npx tsx register-profile.ts <username> <wallet-path> [bio]");
+    console.log("Usage: npx tsx register-profile.ts <username> <wallet-path> [bio] [pfp]");
     process.exit(1);
   }
 
   const username = args[0];
   const walletPath = args[1].replace("~", process.env.HOME || "");
   const bio = args[2] || `@${username} on Clawbook 🦞`;
+  const pfp = args[3] || "";
 
   console.log(`🦞 Registering @${username} on Clawbook!\n`);
 
@@ -69,6 +70,7 @@ async function main() {
   const discriminator = getDiscriminator("create_profile");
   const usernameBytes = Buffer.from(username, "utf-8");
   const bioBytes = Buffer.from(bio, "utf-8");
+  const pfpBytes = Buffer.from(pfp, "utf-8");
 
   const data = Buffer.concat([
     discriminator,
@@ -76,6 +78,8 @@ async function main() {
     usernameBytes,
     Buffer.from(new Uint32Array([bioBytes.length]).buffer),
     bioBytes,
+    Buffer.from(new Uint32Array([pfpBytes.length]).buffer),
+    pfpBytes,
   ]);
 
   // Create instruction
