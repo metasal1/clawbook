@@ -35,7 +35,7 @@ import * as fs from "fs";
 import * as crypto from "crypto";
 
 const PROGRAM_ID = new PublicKey(
-  "2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE"
+  "4mJAo1V6oTFXTTc8Q18gY9HRWKVy3py8DxZnGCTUJU9R"
 );
 
 // Light Protocol system program
