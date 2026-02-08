@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import Link from "next/link";
+
+interface RegisteredDomain {
+  domain: string;
+}
 
 export default function DomainsPage() {
   const [domainName, setDomainName] = useState("");
@@ -15,6 +19,25 @@ export default function DomainsPage() {
     price?: any;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [registeredDomains, setRegisteredDomains] = useState<RegisteredDomain[]>([]);
+  const [loadingDomains, setLoadingDomains] = useState(true);
+  const [domainsError, setDomainsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchDomains() {
+      try {
+        const res = await fetch("/api/domain/list");
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        setRegisteredDomains(data.domains || []);
+      } catch (e: any) {
+        setDomainsError(e.message || "Failed to load domains");
+      } finally {
+        setLoadingDomains(false);
+      }
+    }
+    fetchDomains();
+  }, []);
 
   async function searchDomain() {
     if (!domainName.trim()) return;
@@ -79,6 +102,7 @@ export default function DomainsPage() {
             </span>
           </div>
           <button
+            data-lookup-btn
             onClick={searchDomain}
             disabled={searching || !domainName.trim()}
             className="w-full mt-3 px-4 py-2 text-lg font-bold text-white bg-[#ff6b35] rounded hover:bg-[#e55a25] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
@@ -150,6 +174,50 @@ export default function DomainsPage() {
             <span className="text-red-700">⚠️ {error}</span>
           </div>
         )}
+
+        {/* Registered Domains */}
+        <div className="bg-white border border-[#9aafe5] p-4 mb-6">
+          <h2 className="text-lg font-bold text-[#3b5998] mb-3">🦞 Registered .molt Domains</h2>
+          {loadingDomains ? (
+            <div className="text-center py-8 text-gray-500">Loading registered domains...</div>
+          ) : domainsError ? (
+            <div className="text-center py-4 text-red-600">⚠️ {domainsError}</div>
+          ) : registeredDomains.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">No domains registered yet. Be the first!</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {registeredDomains.slice(0, 12).map((d, i) => {
+                  const name = typeof d.domain === "string" ? d.domain : String(d.domain);
+                  const displayName = name.endsWith(".molt") ? name : `${name}.molt`;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        const clean = displayName.replace(/\.molt$/, "");
+                        setDomainName(clean);
+                        setResult(null);
+                        setError(null);
+                        // Trigger lookup
+                        setTimeout(() => {
+                          const btn = document.querySelector("[data-lookup-btn]") as HTMLButtonElement;
+                          if (btn) btn.click();
+                        }, 100);
+                      }}
+                      className="px-3 py-2 bg-[#fff0e0] border border-[#ff6b35] rounded text-sm font-mono text-[#ff6b35] hover:bg-[#ffe4d0] transition-colors truncate"
+                      title={`Lookup ${displayName}`}
+                    >
+                      {displayName}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 text-center text-xs text-gray-500">
+                {registeredDomains.length} domain{registeredDomains.length !== 1 ? "s" : ""} registered
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Info */}
         <div className="bg-white border border-[#9aafe5] p-4 text-xs text-gray-600">
