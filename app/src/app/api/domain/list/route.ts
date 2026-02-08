@@ -1,24 +1,50 @@
 import { NextResponse } from "next/server";
-import { Connection } from "@solana/web3.js";
-import { TldParser } from "@onsol/tldparser";
-
-const MAINNET_RPC = "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
 
 export async function GET() {
   try {
-    const connection = new Connection(MAINNET_RPC, "confirmed");
-    const parser = new TldParser(connection);
+    // Use AllDomains API to get registered .molt domains
+    const res = await fetch("https://alldomains.id/api/domains/molt", {
+      next: { revalidate: 300 }, // cache for 5 minutes
+    });
 
-    // Get all domains under .molt TLD
-    const allDomains = await parser.getAllDomainsFromTld(".molt");
+    if (!res.ok) {
+      // Fallback: try alternative endpoint
+      const fallbackRes = await fetch(
+        "https://alldomains.id/api/tld/molt/domains"
+      );
+      if (!fallbackRes.ok) {
+        return NextResponse.json(
+          { domains: [], total: 0, note: "Could not fetch domain list" },
+          { status: 200 }
+        );
+      }
+      const fallbackData = await fallbackRes.json();
+      const domains = Array.isArray(fallbackData)
+        ? fallbackData
+        : fallbackData.domains || [];
+      return NextResponse.json({
+        domains: domains.map((d: any) => ({
+          domain:
+            typeof d === "string"
+              ? d
+              : d.domain || d.name || String(d),
+        })),
+        total: domains.length,
+      });
+    }
 
-    const domains = (allDomains || []).map((d: any) => ({
-      domain: typeof d === "string" ? d : d.domain || d.key?.toString() || String(d),
-    }));
+    const data = await res.json();
+    const domains = Array.isArray(data) ? data : data.domains || [];
 
-    return NextResponse.json({ domains, total: domains.length });
+    return NextResponse.json({
+      domains: domains.map((d: any) => ({
+        domain:
+          typeof d === "string" ? d : d.domain || d.name || String(d),
+      })),
+      total: domains.length,
+    });
   } catch (error: any) {
     console.error("Domain list error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ domains: [], total: 0, error: error.message });
   }
 }
