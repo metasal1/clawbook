@@ -7,6 +7,8 @@ import Link from "next/link";
 
 interface RegisteredDomain {
   domain: string;
+  owner?: string;
+  expiresAt?: string;
 }
 
 export default function DomainsPage() {
@@ -28,7 +30,7 @@ export default function DomainsPage() {
       try {
         const res = await fetch("/api/domain/list");
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
+        if (data.error && (!data.domains || data.domains.length === 0)) throw new Error(data.error);
         setRegisteredDomains(data.domains || []);
       } catch (e: any) {
         setDomainsError(e.message || "Failed to load domains");
@@ -186,29 +188,42 @@ export default function DomainsPage() {
             <div className="text-center py-8 text-gray-500">No domains registered yet. Be the first!</div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="space-y-2">
                 {registeredDomains.slice(0, 12).map((d, i) => {
                   const name = typeof d.domain === "string" ? d.domain : String(d.domain);
                   const displayName = name.endsWith(".molt") ? name : `${name}.molt`;
                   return (
-                    <button
+                    <div
                       key={i}
+                      className="flex items-center justify-between p-3 bg-[#fff0e0] border border-[#ff6b35] rounded hover:bg-[#ffe4d0] transition-colors cursor-pointer"
                       onClick={() => {
                         const clean = displayName.replace(/\.molt$/, "");
                         setDomainName(clean);
                         setResult(null);
                         setError(null);
-                        // Trigger lookup
                         setTimeout(() => {
                           const btn = document.querySelector("[data-lookup-btn]") as HTMLButtonElement;
                           if (btn) btn.click();
                         }, 100);
                       }}
-                      className="px-3 py-2 bg-[#fff0e0] border border-[#ff6b35] rounded text-sm font-mono text-[#ff6b35] hover:bg-[#ffe4d0] transition-colors truncate"
-                      title={`Lookup ${displayName}`}
                     >
-                      {displayName}
-                    </button>
+                      <div>
+                        <div className="font-mono font-bold text-[#ff6b35]">{displayName}</div>
+                        {d.owner && d.owner !== "unknown" && (
+                          <div className="text-[10px] text-gray-500 mt-0.5">
+                            Owner:{" "}
+                            <a
+                              href={`/profile/${d.owner}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-[#3b5998] hover:underline"
+                            >
+                              {d.owner.slice(0, 6)}...{d.owner.slice(-4)}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-400">🔍</span>
+                    </div>
                   );
                 })}
               </div>
