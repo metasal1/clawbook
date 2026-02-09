@@ -35,6 +35,13 @@ export default function PasskeyPage() {
   const [credentialId, setCredentialId] = useState<string | null>(null);
   const [step, setStep] = useState<"idle" | "wallet" | "passkey-register" | "passkey-auth" | "done">("idle");
 
+  const isWebView = typeof navigator !== "undefined" && (
+    /Phantom/i.test(navigator.userAgent) ||
+    /wv|WebView/i.test(navigator.userAgent) ||
+    (typeof window !== "undefined" && !window.PublicKeyCredential)
+  );
+  const supportsPasskeys = typeof window !== "undefined" && !!window.PublicKeyCredential;
+
   // Step 1: Sign a message with wallet to prove ownership
   const verifyWallet = useCallback(async () => {
     if (!publicKey || !signMessage) {
@@ -172,6 +179,26 @@ export default function PasskeyPage() {
         <div className="flex justify-center">
           <WalletMultiButton />
         </div>
+
+        {/* WebView Warning */}
+        {(isWebView || !supportsPasskeys) && (
+          <div className="p-4 rounded-lg bg-red-900/20 border border-red-500/30 space-y-2">
+            <p className="font-bold text-red-400">⚠️ Passkeys won't work here</p>
+            <p className="text-sm text-gray-300">
+              You're in a wallet browser (webview) that doesn't support passkeys. 
+              Open this page in <strong>Safari</strong> or <strong>Chrome</strong> instead.
+            </p>
+            <button
+              onClick={() => window.open(window.location.href, "_blank")}
+              className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-semibold transition mt-2"
+            >
+              Open in System Browser
+            </button>
+            <p className="text-xs text-gray-500">
+              Tip: You can still connect your wallet via WalletConnect from Safari.
+            </p>
+          </div>
+        )}
 
         {/* Flow Steps */}
         <div className="space-y-3">
