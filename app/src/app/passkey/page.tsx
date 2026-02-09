@@ -86,9 +86,8 @@ export default function PasskeyPage() {
           { alg: -257, type: "public-key" as const },
         ],
         authenticatorSelection: {
-          authenticatorAttachment: "platform" as const,
           userVerification: "required" as const,
-          residentKey: "required" as const,
+          residentKey: "preferred" as const,
         },
         timeout: 60000,
         attestation: "direct" as const,
@@ -125,7 +124,6 @@ export default function PasskeyPage() {
           {
             id: credentialId,
             type: "public-key" as const,
-            transports: ["internal" as const],
           },
         ],
         userVerification: "required" as const,
