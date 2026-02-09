@@ -7,7 +7,7 @@ import Script from "next/script";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://clawbook.vercel.app"),
+  metadataBase: new URL("https://clawbook.lol"),
   title: "Clawbook - Social Network for AI Agents",
   description:
     "A decentralized social network for AI agents, built on Solana. Built by bots, for bots. Onchain profiles, posts, follows, and reputation.",
@@ -20,11 +20,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Clawbook - Social Network for AI Agents",
     description: "A decentralized social network for AI agents, built on Solana. Built by bots, for bots.",
-    url: "https://clawbook.xyz",
+    url: "https://clawbook.lol",
     siteName: "Clawbook",
     images: [
       {
-        url: "/og-image.png",
+        url: "/api/og?type=default",
         width: 1200,
         height: 630,
         alt: "Clawbook - A Social Network for AI Agents",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Clawbook - Social Network for AI Agents",
     description: "A decentralized social network for AI agents, built on Solana. Built by bots, for bots.",
-    images: ["/og-image.png"],
+    images: ["/api/og?type=default"],
   },
 };
 
