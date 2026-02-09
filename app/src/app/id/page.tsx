@@ -9,6 +9,7 @@ interface RegisteredDomain {
   domain: string;
   owner?: string;
   expiresAt?: string;
+  createdAt?: string;
 }
 
 export default function DomainsPage() {
@@ -219,6 +220,11 @@ export default function DomainsPage() {
                             >
                               {d.owner.slice(0, 6)}...{d.owner.slice(-4)}
                             </a>
+                            {d.createdAt && (
+                              <span className="ml-2 text-gray-400">
+                                · registered {new Date(d.createdAt).toLocaleDateString()}
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>

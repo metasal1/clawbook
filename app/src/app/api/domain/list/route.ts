@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 import {
   getAllTld,
   findAllDomainsForTld,
   NameRecordHeader,
   TldParser,
-  getDomainKey,
 } from "@onsol/tldparser";
 
 const MAINNET_RPC = "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
-
-// Known .molt domains - maintained as a fallback since reverse lookup
-// doesn't reliably resolve domain names from account keys
-const KNOWN_DOMAINS = ["solana", "metasal", "clawbook"];
 
 export async function GET() {
   try {
@@ -27,58 +22,57 @@ export async function GET() {
       return NextResponse.json({ domains: [], total: 0 });
     }
 
+    // Get the TLD parent account's OWNER — required for reverse lookup
+    const parentRecord = await NameRecordHeader.fromAccountAddress(
+      connection,
+      moltTld.parentAccount
+    );
+
+    if (!parentRecord?.owner) {
+      return NextResponse.json({ domains: [], total: 0 });
+    }
+
     // Get all domain account keys under .molt
     const domainAccountKeys = await findAllDomainsForTld(
       connection,
       moltTld.parentAccount
     );
 
-    // Build a map of account key -> domain info
-    const accountKeySet = new Set(domainAccountKeys.map((k) => k.toBase58()));
-
-    // Try to match known domains to on-chain accounts
-    const resolvedDomains: {
+    // Reverse lookup each domain using the parent owner
+    const domains: {
       domain: string;
       owner: string;
       expiresAt: string;
+      createdAt: string;
     }[] = [];
 
-    for (const name of KNOWN_DOMAINS) {
+    for (const key of domainAccountKeys) {
       try {
-        const result = await getDomainKey(name + ".molt");
-        const keyStr = result.pubkey
-          ? result.pubkey.toBase58()
-          : (result as any).toBase58();
+        const name = await parser.reverseLookupNameAccount(
+          key,
+          parentRecord.owner
+        );
+        const record = await NameRecordHeader.fromAccountAddress(
+          connection,
+          key
+        );
 
-        if (accountKeySet.has(keyStr)) {
-          // Get owner info
-          const accountKey = result.pubkey || (result as any);
-          const record = await NameRecordHeader.fromAccountAddress(
-            connection,
-            accountKey
-          );
-          if (record) {
-            resolvedDomains.push({
-              domain: name + ".molt",
-              owner: record.owner?.toBase58() || "unknown",
-              expiresAt: record.expiresAt?.toISOString() || "",
-            });
-          }
-          accountKeySet.delete(keyStr);
+        if (name) {
+          domains.push({
+            domain: name + ".molt",
+            owner: record?.owner?.toBase58() || "unknown",
+            expiresAt: record?.expiresAt?.toISOString() || "",
+            createdAt: record?.createdAt?.toISOString() || "",
+          });
         }
       } catch {
-        // Domain key derivation failed, skip
+        // Skip domains that can't be resolved
       }
     }
 
-    // Any remaining unresolved accounts
-    const unresolvedCount = accountKeySet.size;
-
     return NextResponse.json({
-      domains: resolvedDomains,
-      total: domainAccountKeys.length,
-      resolved: resolvedDomains.length,
-      unresolved: unresolvedCount,
+      domains: domains.sort((a, b) => a.domain.localeCompare(b.domain)),
+      total: domains.length,
     });
   } catch (error: any) {
     console.error("Domain list error:", error);
