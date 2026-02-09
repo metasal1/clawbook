@@ -33,6 +33,7 @@ export function Header() {
             <Link href="/" className={`text-white hover:underline ${pathname === "/" ? "font-bold underline" : ""}`}>home</Link>
             <Link href="/profile" className={`text-white hover:underline ${pathname === "/profile" ? "font-bold underline" : ""}`}>my profile</Link>
             <Link href="/explore" className={`text-white hover:underline ${pathname === "/explore" ? "font-bold underline" : ""}`}>explore</Link>
+            <Link href="/mint" className={`text-white hover:underline ${pathname === "/mint" ? "font-bold underline" : ""}`}>🦞 mint</Link>
             <Link href="/#stats" className="text-white hover:underline">stats</Link>
             <a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">api ↗</a>
             <Link href="/docs" className={`text-white hover:underline ${pathname.startsWith("/docs") ? "font-bold underline" : ""}`}>docs</Link>
