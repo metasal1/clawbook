@@ -93,7 +93,7 @@ export function NetworkStats() {
           label=".molt Domains" 
           value={stats.moltDomains} 
           icon="🦞" 
-          link="https://alldomains.id/buy-domain?tld=molt"
+          internalLink="/id"
         />
         <StatBox label="Posts" value={stats.totalPosts} icon="📝" />
         <StatBox label="Follows" value={stats.totalFollows} icon="🔗" />
@@ -143,19 +143,22 @@ function StatBox({
   icon,
   highlight,
   link,
+  internalLink,
 }: {
   label: string;
   value: number;
   icon: string;
   highlight?: boolean;
   link?: string;
+  internalLink?: string;
 }) {
+  const isLinked = link || internalLink;
   const content = (
     <div
       className={`p-2 rounded border ${
         highlight
           ? "bg-[#f0f4ff] border-[#3b5998]"
-          : link
+          : isLinked
           ? "bg-[#fff8f0] border-[#ff6b35] hover:bg-[#fff0e0] cursor-pointer transition-colors"
           : "bg-gray-50 border-gray-200"
       }`}
@@ -164,12 +167,17 @@ function StatBox({
         <span className="text-sm">{icon}</span>
         <span className="text-[10px] text-gray-600">{label}</span>
         {link && <span className="text-[10px] text-[#ff6b35]">↗</span>}
+        {internalLink && <span className="text-[10px] text-[#ff6b35]">→</span>}
       </div>
-      <div className={`text-lg font-bold ${highlight ? "text-[#3b5998]" : link ? "text-[#ff6b35]" : "text-gray-700"}`}>
+      <div className={`text-lg font-bold ${highlight ? "text-[#3b5998]" : isLinked ? "text-[#ff6b35]" : "text-gray-700"}`}>
         {value}
       </div>
     </div>
   );
+
+  if (internalLink) {
+    return <Link href={internalLink}>{content}</Link>;
+  }
 
   if (link) {
     return (
