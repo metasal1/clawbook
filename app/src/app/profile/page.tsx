@@ -171,6 +171,31 @@ export default function ProfilePage() {
   const [creating, setCreating] = useState(false);
 
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const [mintingPfp, setMintingPfp] = useState(false);
+
+  const mintClawPfp = async (setter: (url: string) => void) => {
+    if (!publicKey) return;
+    setMintingPfp(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/clawpfp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet_address: publicKey.toBase58() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setter(data.avatar_url);
+        setActionMsg(`🦞 ClawPFP minted! Asset: ${data.asset_id.slice(0, 8)}...`);
+      } else {
+        setError(`ClawPFP mint failed: ${data.error}`);
+      }
+    } catch (err) {
+      setError(`ClawPFP error: ${err instanceof Error ? err.message : "Unknown"}`);
+    } finally {
+      setMintingPfp(false);
+    }
+  };
 
   const fetchProfile = useCallback(async () => {
     if (!publicKey) {
@@ -625,14 +650,25 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1">Profile Picture URL</label>
-                      <input
-                        type="url"
-                        value={editPfp}
-                        onChange={(e) => setEditPfp(e.target.value)}
-                        maxLength={128}
-                        placeholder="https://..."
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:border-[#3b5998] focus:outline-none"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          value={editPfp}
+                          onChange={(e) => setEditPfp(e.target.value)}
+                          maxLength={128}
+                          placeholder="https://..."
+                          className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:border-[#3b5998] focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          disabled={mintingPfp}
+                          onClick={() => mintClawPfp(setEditPfp)}
+                          className="px-3 py-1 text-xs font-bold text-white bg-red-500 rounded hover:bg-red-600 disabled:bg-gray-400 transition-colors whitespace-nowrap"
+                          title="Mint a free cNFT avatar via ClawPFP"
+                        >
+                          {mintingPfp ? "Minting..." : "🦞 Mint PFP"}
+                        </button>
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -775,14 +811,25 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1">Profile Picture URL</label>
-                    <input
-                      type="url"
-                      value={newPfp}
-                      onChange={(e) => setNewPfp(e.target.value)}
-                      maxLength={128}
-                      placeholder="https://arweave.net/... or IPFS"
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:border-[#3b5998] focus:outline-none"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={newPfp}
+                        onChange={(e) => setNewPfp(e.target.value)}
+                        maxLength={128}
+                        placeholder="https://arweave.net/... or IPFS"
+                        className="flex-1 px-2 py-1.5 text-sm border border-gray-300 rounded focus:border-[#3b5998] focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        disabled={mintingPfp}
+                        onClick={() => mintClawPfp(setNewPfp)}
+                        className="px-3 py-1.5 text-xs font-bold text-white bg-red-500 rounded hover:bg-red-600 disabled:bg-gray-400 transition-colors whitespace-nowrap"
+                        title="Mint a free cNFT avatar via ClawPFP"
+                      >
+                        {mintingPfp ? "Minting..." : "🦞 Mint PFP"}
+                      </button>
+                    </div>
                   </div>
                   {error && (
                     <div className="bg-[#ffebe8] border border-[#dd3c10] p-2 rounded text-xs text-red-700">
