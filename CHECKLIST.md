@@ -6,13 +6,9 @@
 
 ## 🔴 Critical Issues
 
-- [ ] **Program ID mismatch** — SDK and all scripts use old ID `4mJAo1...` but deployed program is `2tULpab...`
-  - Files affected: `sdk/src/index.ts`, `sdk/create-bots.ts`, `sdk/create-compressed-post.ts`, `sdk/migrate-profiles.ts`, `sdk/register-profile.ts`, `sdk/register-clawbook.ts`, `sdk/register-bot.ts`, `sdk/close-profile.ts`
-  - **Frontend is correct** (`2tULpab...`)
-  - Anchor.toml still references old ID `4mJAo1...` in `[programs.devnet]`
-  - ⚠️ This means SDK post(), register, follow etc. all hit the WRONG program
+- [x] **Program ID mismatch** — ✅ FIXED — Updated all SDK/scripts/Anchor.toml to `2tULpab...`
 
-- [ ] **Search API broken** — `/api/search?q=clawbook` returns: `"Received integer which is too large to be safely represented as a JavaScript number"` (likely BigInt serialization issue in Turso/profile data)
+- [x] **Search API broken** — ✅ FIXED — Added `intMode: "number"` to Turso client
 
 ## 🟡 Important
 
@@ -23,7 +19,7 @@
   - Working: tweet, delete, mentions, user tweets
   - Reply to @rabbitholewld still pending
 
-- [ ] **Anchor.toml** — update program ID to `2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE`
+- [x] **Anchor.toml** — ✅ FIXED
 
 - [ ] **Test coverage** — only 2 basic tests exist (create profile, create post). No tests for:
   - Compressed posts
@@ -54,8 +50,8 @@
 
 ## 📋 Action Items (Priority Order)
 
-1. **Fix program ID everywhere** — replace `4mJAo1V6oTFXTTc8Q18gY9HRWKVy3py8DxZnGCTUJU9R` with `2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE` in all SDK/scripts
-2. **Fix search API BigInt bug** — likely needs `JSON.stringify` replacer for BigInt values
-3. **Reply to @rabbitholewld** on X about biggest challenge
+1. ~~Fix program ID everywhere~~ ✅ DONE
+2. ~~Fix search API BigInt bug~~ ✅ DONE
+3. ~~Reply to @rabbitholewld~~ ✅ Posted standalone tweet about challenges
 4. **E2E test compressed posts** on devnet with correct program ID
 5. **Final forum update** on Colosseum before deadline
