@@ -16,6 +16,17 @@ import {
   LAMPORTS_PER_SOL,
   ComputeBudgetProgram,
 } from "@solana/web3.js";
+import {
+  createRpc,
+  defaultTestStateTreeAccounts,
+  defaultStaticAccountsStruct,
+  deriveAddressSeed,
+  deriveAddress,
+  lightSystemProgram,
+  accountCompressionProgram,
+  noopProgram,
+  bn,
+} from "@lightprotocol/stateless.js";
 import * as fs from "fs";
 import * as crypto from "crypto";
 import { generateBotProof, encodeBotProof } from "./src/botVerification";
@@ -203,28 +214,90 @@ async function main() {
       offset += 1 + 32 + 1; // type + proof_hash + verified
       const postCount = Number(profileData.readBigUInt64LE(offset));
 
-      // Derive post PDA
+      // Use Light Protocol compressed posts
       const postCountBytes = Buffer.alloc(8);
       postCountBytes.writeBigUInt64LE(BigInt(postCount));
-      const [postPDA] = PublicKey.findProgramAddressSync(
-        [Buffer.from("post"), botWallet.publicKey.toBuffer(), postCountBytes],
+
+      const rpc = createRpc(RPC_URL, RPC_URL);
+      const treeAccounts = defaultTestStateTreeAccounts();
+      const staticAccounts = defaultStaticAccountsStruct();
+
+      const addressSeed = deriveAddressSeed(
+        [
+          Buffer.from("compressed_post"),
+          botWallet.publicKey.toBuffer(),
+          postCountBytes,
+        ],
         PROGRAM_ID
       );
 
-      const postDiscriminator = getDiscriminator("create_post");
+      const address = deriveAddress(addressSeed, treeAccounts.addressTree);
+      const addressBn = bn(address.toBytes());
+
+      const validityProof = await rpc.getValidityProofV0(
+        [],
+        [
+          {
+            address: addressBn,
+            tree: treeAccounts.addressTree,
+            queue: treeAccounts.addressQueue,
+          },
+        ]
+      );
+
+      if (!validityProof.compressedProof) {
+        console.error(`   ❌ Failed to get compressed proof, skipping`);
+        break;
+      }
+
+      const proofA = Buffer.from(new Uint8Array(validityProof.compressedProof.a));
+      const proofB = Buffer.from(new Uint8Array(validityProof.compressedProof.b));
+      const proofC = Buffer.from(new Uint8Array(validityProof.compressedProof.c));
+
+      const addressTreeInfoBuf = Buffer.alloc(4);
+      addressTreeInfoBuf.writeUInt8(2, 0);
+      addressTreeInfoBuf.writeUInt8(3, 1);
+      addressTreeInfoBuf.writeUInt16LE(validityProof.rootIndices[0], 2);
+
+      const outputTreeBuf = Buffer.alloc(1);
+      outputTreeBuf.writeUInt8(0, 0);
+
       const contentBytes = Buffer.from(content, "utf-8");
+      const contentLenBuf = Buffer.alloc(4);
+      contentLenBuf.writeUInt32LE(contentBytes.length, 0);
+
       const postData = Buffer.concat([
-        postDiscriminator,
-        Buffer.from(new Uint32Array([contentBytes.length]).buffer),
-        contentBytes,
+        getDiscriminator("create_compressed_post"),
+        proofA, proofB, proofC,
+        addressTreeInfoBuf,
+        outputTreeBuf,
+        contentLenBuf, contentBytes,
       ]);
+
+      const lightSystemProgramId = new PublicKey(lightSystemProgram);
+      const accountCompressionProgramId = new PublicKey(accountCompressionProgram);
+      const noopProgramId = new PublicKey(noopProgram);
+
+      const remainingKeys = [
+        { pubkey: lightSystemProgramId, isWritable: false, isSigner: false },
+        { pubkey: botWallet.publicKey, isWritable: true, isSigner: true },
+        { pubkey: staticAccounts.registeredProgramPda, isWritable: false, isSigner: false },
+        { pubkey: noopProgramId, isWritable: false, isSigner: false },
+        { pubkey: staticAccounts.accountCompressionAuthority, isWritable: false, isSigner: false },
+        { pubkey: accountCompressionProgramId, isWritable: false, isSigner: false },
+        { pubkey: PROGRAM_ID, isWritable: false, isSigner: false },
+        { pubkey: SystemProgram.programId, isWritable: false, isSigner: false },
+        { pubkey: treeAccounts.merkleTree, isWritable: true, isSigner: false },
+        { pubkey: treeAccounts.nullifierQueue, isWritable: true, isSigner: false },
+        { pubkey: treeAccounts.addressTree, isWritable: true, isSigner: false },
+        { pubkey: treeAccounts.addressQueue, isWritable: true, isSigner: false },
+      ];
 
       const postIx = new TransactionInstruction({
         keys: [
-          { pubkey: postPDA, isSigner: false, isWritable: true },
-          { pubkey: profilePDA, isSigner: false, isWritable: true },
           { pubkey: botWallet.publicKey, isSigner: true, isWritable: true },
-          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+          { pubkey: profilePDA, isSigner: false, isWritable: true },
+          ...remainingKeys,
         ],
         programId: PROGRAM_ID,
         data: postData,
@@ -236,7 +309,7 @@ async function main() {
           postIx
         );
         const sig = await sendAndConfirmTransaction(connection, tx, [botWallet]);
-        console.log(`   ✅ Posted! TX: ${sig.slice(0, 16)}...`);
+        console.log(`   ✅ Posted (compressed)! TX: ${sig.slice(0, 16)}...`);
       } catch (e: any) {
         console.error(`   ❌ Post failed: ${e.message}`);
         if (e.logs) console.error(`   Logs:`, e.logs.slice(-3));
