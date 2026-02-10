@@ -6,7 +6,7 @@
 import { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import * as fs from "fs";
 
-const PROGRAM_ID = new PublicKey("4mJAo1V6oTFXTTc8Q18gY9HRWKVy3py8DxZnGCTUJU9R");
+const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
 const RPC_URL = "https://api.devnet.solana.com";
 
 // Discriminator for close_profile instruction (first 8 bytes of sha256("global:close_profile"))

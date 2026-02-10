@@ -27,7 +27,7 @@ export function getDb() {
     );
   }
 
-  client = createClient({ url, authToken });
+  client = createClient({ url, authToken, intMode: "number" });
   return client;
 }
 
