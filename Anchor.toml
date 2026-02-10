@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-clawbook = "4mJAo1V6oTFXTTc8Q18gY9HRWKVy3py8DxZnGCTUJU9R"
+clawbook = "9b8A9k8mDh9jgKubh5EgbvDrvfMLzj4KXipxP1enkvNa"
 
 [registry]
 url = "https://api.apr.dev"

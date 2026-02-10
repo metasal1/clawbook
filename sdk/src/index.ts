@@ -30,7 +30,7 @@ import {
 
 // Program ID - update after deployment
 export const CLAWBOOK_PROGRAM_ID = new PublicKey(
-  "4mJAo1V6oTFXTTc8Q18gY9HRWKVy3py8DxZnGCTUJU9R"
+  "2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE"
 );
 
 // PDA Seeds

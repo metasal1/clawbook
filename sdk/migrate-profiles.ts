@@ -40,7 +40,7 @@ async function main() {
 
   const connection = new Connection(rpcUrl, "confirmed");
   const PROGRAM_ID = new PublicKey(
-    "4mJAo1V6oTFXTTc8Q18gY9HRWKVy3py8DxZnGCTUJU9R"
+    "2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE"
   );
 
   // Find old profile accounts (402 bytes)
