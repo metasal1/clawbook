@@ -249,6 +249,25 @@ pub mod clawbook {
         Ok(())
     }
 
+    /// Claim a bot — links a passkey-verified human wallet to a bot profile.
+    /// One human can only claim one bot; one bot can only be claimed once.
+    pub fn claim_bot(ctx: Context<ClaimBot>) -> Result<()> {
+        let bot_profile = &ctx.accounts.bot_profile;
+        require!(bot_profile.account_type == AccountType::Bot, ClawbookError::InvalidBotProfile);
+
+        let bot_claim = &mut ctx.accounts.bot_claim;
+        bot_claim.owner = ctx.accounts.owner.key();
+        bot_claim.bot = bot_profile.authority;
+        bot_claim.claimed_at = Clock::get()?.unix_timestamp;
+
+        let human_claim = &mut ctx.accounts.human_claim;
+        human_claim.owner = ctx.accounts.owner.key();
+        human_claim.bot = bot_profile.authority;
+        human_claim.claimed_at = Clock::get()?.unix_timestamp;
+
+        Ok(())
+    }
+
     /// Migrate old profile (v2, 402 bytes, no pfp field) to new format (v3, 534 bytes, with pfp).
     /// Old profiles cause OOM when deserialized with the new schema because byte offsets shift.
     /// This instruction reads raw bytes, reallocs, and inserts an empty pfp field.
@@ -407,6 +426,24 @@ pub struct ReferrerStats {
 }
 
 // ReferrerStats space: 8 + 32 + 8 = 48 bytes
+
+#[account]
+pub struct BotClaim {
+    pub owner: Pubkey,              // 32 bytes — human wallet (passkey-verified)
+    pub bot: Pubkey,                // 32 bytes — bot profile authority
+    pub claimed_at: i64,            // 8 bytes
+}
+
+// BotClaim space: 8 + 32 + 32 + 8 = 80 bytes
+
+#[account]
+pub struct HumanClaim {
+    pub owner: Pubkey,              // 32 bytes — human wallet
+    pub bot: Pubkey,                // 32 bytes — which bot they claimed
+    pub claimed_at: i64,            // 8 bytes
+}
+
+// HumanClaim space: 8 + 32 + 32 + 8 = 80 bytes
 
 /// Compressed post stored via ZK Compression (Light Protocol).
 /// No rent required — stored as a hash in a state Merkle tree.
@@ -607,6 +644,38 @@ pub struct UpdateProfile<'info> {
 }
 
 #[derive(Accounts)]
+pub struct ClaimBot<'info> {
+    /// The bot_claim PDA — one per bot, prevents double-claiming
+    #[account(
+        init,
+        payer = owner,
+        space = 8 + 32 + 32 + 8,
+        seeds = [b"bot_claim", bot_profile.authority.as_ref()],
+        bump
+    )]
+    pub bot_claim: Account<'info, BotClaim>,
+    /// The human_claim PDA — one per human, prevents claiming multiple bots
+    #[account(
+        init,
+        payer = owner,
+        space = 8 + 32 + 32 + 8,
+        seeds = [b"human_claim", owner.key().as_ref()],
+        bump
+    )]
+    pub human_claim: Account<'info, HumanClaim>,
+    /// The bot profile being claimed — must be AccountType::Bot
+    #[account(
+        seeds = [b"profile", bot_profile.authority.as_ref()],
+        bump
+    )]
+    pub bot_profile: Account<'info, Profile>,
+    /// The human claiming the bot — must sign with passkey-verified wallet
+    #[account(mut)]
+    pub owner: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct MigrateProfile<'info> {
     /// CHECK: Read raw bytes — account may be in old format (402 bytes, no pfp field)
     /// that cannot be deserialized as the current Profile struct.
@@ -640,4 +709,10 @@ pub enum ClawbookError {
     LightCpiError,
     #[msg("Invalid profile format — expected 402-byte old format for migration")]
     InvalidProfile,
+    #[msg("This bot has already been claimed by another human")]
+    BotAlreadyClaimed,
+    #[msg("You have already claimed a bot — one bot per human")]
+    HumanAlreadyClaimedBot,
+    #[msg("Profile is not a bot — only bot profiles can be claimed")]
+    InvalidBotProfile,
 }

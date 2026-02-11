@@ -13,6 +13,7 @@
     "@lightprotocol/stateless.js": "^0.22.0",
     "@onsol/tldparser": "^1.2.1",
     "@simplewebauthn/browser": "^13.2.2",
+    "@simplewebauthn/server": "^13.2.2",
     "@solana/connector": "^0.2.4",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",

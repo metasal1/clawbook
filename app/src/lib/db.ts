@@ -112,5 +112,21 @@ export async function initSchema() {
     `CREATE INDEX IF NOT EXISTS idx_profiles_followers ON profiles(follower_count DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_likes_post ON likes(post_address)`,
     `CREATE INDEX IF NOT EXISTS idx_likes_user ON likes(user_pubkey)`,
+    // Passkey credentials for human verification
+    `CREATE TABLE IF NOT EXISTS passkey_credentials (
+      credential_id TEXT PRIMARY KEY,
+      wallet TEXT NOT NULL UNIQUE,
+      public_key TEXT NOT NULL,
+      counter INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL DEFAULT 0
+    )`,
+    // Bot claims — links humans to bots (1:1)
+    `CREATE TABLE IF NOT EXISTS bot_claims (
+      bot_authority TEXT PRIMARY KEY,
+      owner_wallet TEXT NOT NULL UNIQUE,
+      credential_id TEXT NOT NULL,
+      claimed_at INTEGER NOT NULL DEFAULT 0,
+      tx_signature TEXT
+    )`,
   ]);
 }
