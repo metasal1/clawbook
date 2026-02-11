@@ -1,8 +1,9 @@
+import { PROGRAM_ID } from "@/lib/constants";
 import { NextRequest, NextResponse } from "next/server";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getDb, initSchema } from "@/lib/db";
 
-const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
+// PROGRAM_ID imported from @/lib/constants
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
 const SYNC_SECRET = process.env.SYNC_SECRET || "";
 

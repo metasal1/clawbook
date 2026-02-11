@@ -1,3 +1,4 @@
+import { PROGRAM_ID } from "@/lib/constants";
 /**
  * API route for ZK Compressed Post proof fetching.
  *
@@ -24,9 +25,6 @@ import {
   bn,
 } from "@lightprotocol/stateless.js";
 
-const PROGRAM_ID = new PublicKey(
-  "2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE"
-);
 
 /**
  * Build a compression-capable RPC URL.

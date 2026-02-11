@@ -1,11 +1,12 @@
 "use client";
+import { PROGRAM_ID } from "@/lib/constants";
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { ComputeBudgetProgram, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 
-const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
+// PROGRAM_ID imported from @/lib/constants
 
 // Discriminator for create_profile (sha256("global:create_profile")[0:8])
 const CREATE_PROFILE_DISCRIMINATOR = Buffer.from([225, 205, 234, 143, 17, 186, 50, 220]);

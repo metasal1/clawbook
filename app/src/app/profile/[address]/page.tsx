@@ -1,4 +1,5 @@
 "use client";
+import { PROGRAM_ID } from "@/lib/constants";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -9,7 +10,7 @@ import { Footer } from "@/components/Footer";
 import { PostFeed } from "@/components/PostFeed";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 
-const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
+// PROGRAM_ID imported from @/lib/constants
 
 interface ProfileData {
   username: string;

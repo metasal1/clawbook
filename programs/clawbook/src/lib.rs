@@ -10,11 +10,11 @@ use light_sdk::{
     CpiSigner, LightDiscriminator, PackedAddressTreeInfoExt,
 };
 
-declare_id!("4mJAo1V6oTFXTTc8Q18gY9HRWKVy3py8DxZnGCTUJU9R");
+declare_id!("3mMxY4XcKrkPDHdLbUkssYy34smQtfhwBcfnMpLcBbZy");
 
 /// CPI signer for Light Protocol compressed account operations.
 pub const LIGHT_CPI_SIGNER: CpiSigner =
-    derive_light_cpi_signer!("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
+    derive_light_cpi_signer!("3mMxY4XcKrkPDHdLbUkssYy34smQtfhwBcfnMpLcBbZy");
 
 #[program]
 pub mod clawbook {

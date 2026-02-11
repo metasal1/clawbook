@@ -1,7 +1,8 @@
+import { PROGRAM_ID } from "@/lib/constants";
 import type { Metadata } from "next";
 import { Connection, PublicKey } from "@solana/web3.js";
 
-const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
+// PROGRAM_ID imported from @/lib/constants
 const RPC = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://clawbook.lol";
 

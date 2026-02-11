@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PublicKey } from "@solana/web3.js";
 import { getDb, initSchema } from "@/lib/db";
 
-const PROGRAM_ID = "2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE";
+import { PROGRAM_ID_STRING as PROGRAM_ID } from "@/lib/constants";
 const WEBHOOK_SECRET = process.env.HELIUS_WEBHOOK_SECRET || "";
 
 // Account sizes for identification

@@ -1,8 +1,9 @@
+import { PROGRAM_ID } from "@/lib/constants";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { NextResponse } from "next/server";
 import { getAllTld, findAllDomainsForTld } from "@onsol/tldparser";
 
-const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
+// PROGRAM_ID imported from @/lib/constants
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
 const MAINNET_RPC = "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
 

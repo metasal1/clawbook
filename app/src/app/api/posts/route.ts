@@ -1,7 +1,6 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { NextRequest, NextResponse } from "next/server";
-
-const PROGRAM_ID = new PublicKey("2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE");
+import { PROGRAM_ID } from "@/lib/constants";
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
 
 // Post account size: 8 + 32 + (4+280) + 8 + 8 + 8 = 348
