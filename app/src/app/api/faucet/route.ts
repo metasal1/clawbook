@@ -9,7 +9,7 @@ import {
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 
-const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
 const FAUCET_AMOUNT = 1 * LAMPORTS_PER_SOL; // 1 SOL
 const RATE_LIMIT_MS = 24 * 60 * 60 * 1000; // 24 hours
 

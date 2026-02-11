@@ -107,7 +107,7 @@ export default function ClaimBotPage() {
 
     try {
       const connection = new Connection(
-        process.env.NEXT_PUBLIC_RPC_URL || "https://api.mainnet-beta.solana.com"
+        process.env.NEXT_PUBLIC_RPC_URL || "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com"
       );
 
       const programId = new PublicKey(PROGRAM_ID);

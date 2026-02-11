@@ -13,7 +13,7 @@ export function TreasuryBalance() {
   useEffect(() => {
     async function fetchBalance() {
       try {
-        const mainnet = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
+        const mainnet = new Connection("https://viviyan-bkj12u-fast-mainnet.helius-rpc.com", "confirmed");
         const lamports = await mainnet.getBalance(MAINNET_VAULT);
         setBalance(lamports / LAMPORTS_PER_SOL);
       } catch (e) {
