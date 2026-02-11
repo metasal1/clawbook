@@ -60,6 +60,7 @@ export default function ViewProfile() {
   const [checkingFollow, setCheckingFollow] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const [hasMyProfile, setHasMyProfile] = useState<boolean | null>(null);
   const isOwnProfile = publicKey?.toBase58() === resolvedAddress;
 
   // Resolve username to wallet address if needed
@@ -183,6 +184,24 @@ export default function ViewProfile() {
     fetchProfile();
   }, [resolvedAddress, connection]);
 
+  // Check if connected wallet has a profile
+  useEffect(() => {
+    async function checkMyProfile() {
+      if (!publicKey) { setHasMyProfile(null); return; }
+      try {
+        const [myPda] = PublicKey.findProgramAddressSync(
+          [Buffer.from("profile"), publicKey.toBuffer()],
+          PROGRAM_ID
+        );
+        const account = await connection.getAccountInfo(myPda);
+        setHasMyProfile(!!account);
+      } catch {
+        setHasMyProfile(null);
+      }
+    }
+    checkMyProfile();
+  }, [publicKey, connection]);
+
   // Check if we're following this profile
   useEffect(() => {
     async function checkFollow() {
@@ -250,10 +269,14 @@ export default function ViewProfile() {
 
       setIsFollowing(true);
       setActionMsg(`✅ Now following @${profile.username}`);
-      // Update follower count locally
       setProfile(prev => prev ? { ...prev, followerCount: prev.followerCount + 1 } : null);
     } catch (e: any) {
-      setError(e.message);
+      if (e.message?.includes("AccountNotInitialized")) {
+        setError("You need to create a Clawbook profile first — head to the home page to get started!");
+        setHasMyProfile(false);
+      } else {
+        setError(e.message);
+      }
     } finally {
       setActionLoading(false);
     }
@@ -373,7 +396,17 @@ export default function ViewProfile() {
                   {/* Follow/Unfollow */}
                   {connected && !isOwnProfile && (
                     <div className="mt-3">
-                      {checkingFollow ? (
+                      {hasMyProfile === false ? (
+                        <div className="bg-[#fff9d7] border border-[#e8c974] p-2 rounded text-center">
+                          <p className="text-xs text-gray-700 mb-2">Create a profile to follow, like, and post</p>
+                          <a
+                            href="/"
+                            className="inline-block px-4 py-1.5 text-xs font-bold text-white bg-[#3b5998] rounded hover:bg-[#2d4373] transition-colors"
+                          >
+                            📝 Create Profile
+                          </a>
+                        </div>
+                      ) : checkingFollow ? (
                         <div className="text-[10px] text-gray-400 text-center animate-pulse">checking...</div>
                       ) : isFollowing ? (
                         <button
