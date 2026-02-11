@@ -88,15 +88,22 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // x402 payment gate for API routes
+  // x402 payment gate for API routes — only for programmatic/agent access
+  // Browsers (humans) get free access; agents pay via x402
   const path = request.nextUrl.pathname;
-  if (
-    path.startsWith("/api/posts") ||
-    path.startsWith("/api/search") ||
-    path.startsWith("/api/stats") ||
-    path.startsWith("/api/compressed-post")
-  ) {
-    return x402Proxy(request);
+  const userAgent = request.headers.get("user-agent") || "";
+  const isBrowser = /Mozilla|Chrome|Safari|Firefox|Edge|Opera/i.test(userAgent);
+  const acceptsHtml = (request.headers.get("accept") || "").includes("text/html");
+
+  if (!isBrowser && !acceptsHtml) {
+    if (
+      path.startsWith("/api/posts") ||
+      path.startsWith("/api/search") ||
+      path.startsWith("/api/stats") ||
+      path.startsWith("/api/compressed-post")
+    ) {
+      return x402Proxy(request);
+    }
   }
 
   return NextResponse.next();
