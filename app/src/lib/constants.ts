@@ -5,8 +5,8 @@ import { PublicKey } from "@solana/web3.js";
  * defaults to devnet program.
  */
 export const PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_PROGRAM_ID || "2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE"
+  process.env.NEXT_PUBLIC_PROGRAM_ID || "3mMxY4XcKrkPDHdLbUkssYy34smQtfhwBcfnMpLcBbZy"
 );
 
 export const PROGRAM_ID_STRING =
-  process.env.NEXT_PUBLIC_PROGRAM_ID || "2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE";
+  process.env.NEXT_PUBLIC_PROGRAM_ID || "3mMxY4XcKrkPDHdLbUkssYy34smQtfhwBcfnMpLcBbZy";
