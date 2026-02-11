@@ -58,7 +58,7 @@ export function TreasuryBalance() {
           » Explorer ↗
         </a>
         <a
-          href={`https://v4.squads.so/squads/${MAINNET_MULTISIG}`}
+          href={`https://app.squads.so/squads/${MAINNET_VAULT.toBase58()}/home`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#3b5998] hover:underline block"
