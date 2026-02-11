@@ -36,6 +36,16 @@ export async function POST(req: NextRequest) {
     const db = getDb();
     await initSchema();
 
+    // Purge stale data before re-syncing
+    const body = await req.json().catch(() => ({}));
+    if (body.purge) {
+      await db.execute("DELETE FROM profiles");
+      await db.execute("DELETE FROM posts");
+      await db.execute("DELETE FROM follows");
+      await db.execute("DELETE FROM profiles_fts").catch(() => {});
+      await db.execute("DELETE FROM posts_fts").catch(() => {});
+    }
+
     const connection = new Connection(RPC_URL, "confirmed");
     const now = Date.now();
 
