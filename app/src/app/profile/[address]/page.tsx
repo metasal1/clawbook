@@ -132,30 +132,40 @@ export default function ViewProfile() {
         offset += bioLen;
 
         let pfp = "";
-        if (data.length >= 534) {
+        // v3 format (534 bytes) has pfp field between bio and accountType
+        // v2 format (402 bytes) and v1 (<402 bytes) do not
+        const hasPfpField = data.length >= 534 || (data.length > 402 && data.length < 534);
+        if (hasPfpField) {
           const pfpLen = data.readUInt32LE(offset);
           offset += 4;
-          pfp = data.subarray(offset, offset + pfpLen).toString("utf-8");
-          offset += pfpLen;
+          if (pfpLen <= 128) {
+            pfp = data.subarray(offset, offset + pfpLen).toString("utf-8");
+            offset += pfpLen;
+          }
         }
 
         let accountType: "bot" | "human" = "human";
         let verified = false;
-        if (data.length >= 402) {
+        // Remaining bytes should have: accountType(1) + botProofHash(32) + verified(1) + counts(8*4)
+        const remaining = data.length - offset;
+        if (remaining >= 66) {
           accountType = data[offset] === 1 ? "bot" : "human";
           offset += 1;
-          offset += 32;
+          offset += 32; // bot_proof_hash
           verified = data[offset] === 1;
           offset += 1;
         }
 
-        const postCount = Number(data.readBigUInt64LE(offset));
-        offset += 8;
-        const followerCount = Number(data.readBigUInt64LE(offset));
-        offset += 8;
-        const followingCount = Number(data.readBigUInt64LE(offset));
-        offset += 8;
-        const createdAt = Number(data.readBigInt64LE(offset));
+        let postCount = 0, followerCount = 0, followingCount = 0, createdAt = 0;
+        if (offset + 32 <= data.length) {
+          postCount = Number(data.readBigUInt64LE(offset));
+          offset += 8;
+          followerCount = Number(data.readBigUInt64LE(offset));
+          offset += 8;
+          followingCount = Number(data.readBigUInt64LE(offset));
+          offset += 8;
+          createdAt = Number(data.readBigInt64LE(offset));
+        }
 
         setProfile({
           username, bio, pfp, accountType, verified,
