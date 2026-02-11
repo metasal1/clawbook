@@ -4,7 +4,7 @@ import { ExactSvmScheme } from "@x402/svm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/http";
 
 // Multisig treasury vault — all x402 payments go here
-const PAY_TO = process.env.X402_PAY_TO || "FUtXoDxnQfwcPAAPYPPnj8rjRfF37kTXVLcV8Jdbin3X";
+const PAY_TO = process.env.X402_PAY_TO || "EXTXqRTYwvuv9MpjHVnkaVaLqUPuCpoEDq2iyNykQFf8";
 
 // Solana mainnet CAIP-2 identifier
 const SOLANA_MAINNET = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
