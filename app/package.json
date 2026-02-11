@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@bonfida/spl-name-service": "^3.0.16",
     "@libsql/client": "^0.17.0",
     "@lightprotocol/stateless.js": "^0.22.0",
     "@onsol/tldparser": "^1.2.1",

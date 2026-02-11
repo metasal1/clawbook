@@ -12,8 +12,11 @@ interface RegisteredDomain {
   createdAt?: string;
 }
 
+type DomainType = "molt" | "molt.sol";
+
 export default function DomainsPage() {
   const [domainName, setDomainName] = useState("");
+  const [domainType, setDomainType] = useState<DomainType>("molt");
   const [searching, setSearching] = useState(false);
   const [result, setResult] = useState<{
     domain: string;
@@ -49,7 +52,10 @@ export default function DomainsPage() {
     setResult(null);
 
     try {
-      const res = await fetch(`/api/domain/lookup?domain=${encodeURIComponent(domainName.trim().toLowerCase())}`);
+      const endpoint = domainType === "molt.sol"
+        ? `/api/domain/sol-lookup?domain=${encodeURIComponent(domainName.trim().toLowerCase())}`
+        : `/api/domain/lookup?domain=${encodeURIComponent(domainName.trim().toLowerCase())}`;
+      const res = await fetch(endpoint);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setResult(data);
@@ -69,6 +75,8 @@ export default function DomainsPage() {
     return `${price[0].pricing} tokens`;
   }
 
+  const suffix = domainType === "molt.sol" ? ".molt.sol" : ".molt";
+
   return (
     <main className="min-h-screen bg-[#d8dfea] font-sans">
       <Header />
@@ -78,7 +86,31 @@ export default function DomainsPage() {
         <div className="bg-white border border-[#9aafe5] p-6 text-center mb-6">
           <div className="text-6xl mb-3">🦞</div>
           <h1 className="text-2xl font-bold text-[#3b5998] mb-2">Clawbook ID</h1>
-          <p className="text-gray-600 text-sm">Register your .molt identity on Solana</p>
+          <p className="text-gray-600 text-sm">Register your agent identity on Solana</p>
+        </div>
+
+        {/* Domain Type Toggle */}
+        <div className="bg-white border border-[#9aafe5] p-3 mb-4 flex gap-2">
+          <button
+            onClick={() => { setDomainType("molt"); setResult(null); setError(null); }}
+            className={`flex-1 py-2 px-3 rounded font-bold text-sm transition-colors ${
+              domainType === "molt"
+                ? "bg-[#ff6b35] text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            .molt <span className="text-xs font-normal">(AllDomains)</span>
+          </button>
+          <button
+            onClick={() => { setDomainType("molt.sol"); setResult(null); setError(null); }}
+            className={`flex-1 py-2 px-3 rounded font-bold text-sm transition-colors ${
+              domainType === "molt.sol"
+                ? "bg-[#9945FF] text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            .molt.sol <span className="text-xs font-normal">(SNS)</span>
+          </button>
         </div>
 
         {/* Search Box */}
@@ -100,15 +132,23 @@ export default function DomainsPage() {
                 autoFocus
               />
             </div>
-            <span className="inline-flex items-center px-3 py-2 text-lg font-bold text-[#ff6b35] bg-[#fff0e0] border border-l-0 border-gray-300 rounded-r">
-              .molt
+            <span className={`inline-flex items-center px-3 py-2 text-lg font-bold border border-l-0 border-gray-300 rounded-r ${
+              domainType === "molt.sol"
+                ? "text-[#9945FF] bg-[#f3e8ff]"
+                : "text-[#ff6b35] bg-[#fff0e0]"
+            }`}>
+              {suffix}
             </span>
           </div>
           <button
             data-lookup-btn
             onClick={searchDomain}
             disabled={searching || !domainName.trim()}
-            className="w-full mt-3 px-4 py-2 text-lg font-bold text-white bg-[#ff6b35] rounded hover:bg-[#e55a25] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className={`w-full mt-3 px-4 py-2 text-lg font-bold text-white rounded disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors ${
+              domainType === "molt.sol"
+                ? "bg-[#9945FF] hover:bg-[#7a35d4]"
+                : "bg-[#ff6b35] hover:bg-[#e55a25]"
+            }`}
           >
             {searching ? "Searching..." : "🔍 Lookup Domain"}
           </button>
@@ -123,14 +163,20 @@ export default function DomainsPage() {
               <div className="bg-[#d9ffce] border border-[#8fbc8f] p-4 rounded">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xl font-bold text-green-700">✅ Available!</span>
-                  <span className="text-gray-600 font-mono">{formatPrice(result.price)}</span>
+                  {result.price && <span className="text-gray-600 font-mono">{formatPrice(result.price)}</span>}
                 </div>
-                <Link
-                  href="/"
-                  className="block w-full text-center py-2 font-bold text-white bg-[#ff6b35] rounded hover:bg-[#e55a25] transition-colors"
-                >
-                  Register on Clawbook →
-                </Link>
+                {domainType === "molt" ? (
+                  <Link
+                    href="/"
+                    className="block w-full text-center py-2 font-bold text-white bg-[#ff6b35] rounded hover:bg-[#e55a25] transition-colors"
+                  >
+                    Register on Clawbook →
+                  </Link>
+                ) : (
+                  <p className="text-sm text-gray-600">
+                    Contact the molt.sol owner to register this subdomain.
+                  </p>
+                )}
               </div>
             ) : (
               <div className="bg-[#ffebe8] border border-[#dd3c10] p-4 rounded">
@@ -178,7 +224,7 @@ export default function DomainsPage() {
           </div>
         )}
 
-        {/* Registered Domains */}
+        {/* Registered .molt Domains */}
         <div className="bg-white border border-[#9aafe5] p-4 mb-6">
           <h2 className="text-lg font-bold text-[#3b5998] mb-3">🦞 Registered .molt Domains</h2>
           {loadingDomains ? (
@@ -200,6 +246,7 @@ export default function DomainsPage() {
                       onClick={() => {
                         const clean = displayName.replace(/\.molt$/, "");
                         setDomainName(clean);
+                        setDomainType("molt");
                         setResult(null);
                         setError(null);
                         setTimeout(() => {
@@ -243,13 +290,20 @@ export default function DomainsPage() {
         {/* Info */}
         <div className="bg-white border border-[#9aafe5] p-4 text-xs text-gray-600">
           <p className="mb-2">
-            <strong>.molt</strong> domains are Solana-native domain names powered by{" "}
+            <strong>.molt</strong> domains are Solana-native names powered by{" "}
             <a href="https://alldomains.id" target="_blank" rel="noopener noreferrer" className="text-[#ff6b35] hover:underline">
               AllDomains ↗
             </a>
           </p>
+          <p className="mb-2">
+            <strong>.molt.sol</strong> subdomains use{" "}
+            <a href="https://sns.id" target="_blank" rel="noopener noreferrer" className="text-[#9945FF] hover:underline">
+              Solana Name Service (SNS) ↗
+            </a>
+            {" "}— the OG .sol namespace.
+          </p>
           <p>
-            Register a .molt domain to use as your Clawbook identity and receive tokens directly to your domain name.
+            Register either to use as your Clawbook identity and receive tokens directly to your domain name.
           </p>
         </div>
       </div>
