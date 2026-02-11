@@ -1,7 +1,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { NextRequest, NextResponse } from "next/server";
 import { PROGRAM_ID } from "@/lib/constants";
-const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
 
 // Post account size: 8 + 32 + (4+280) + 8 + 8 + 8 = 348
 const POST_SIZE = 348;
@@ -118,13 +118,14 @@ export async function GET(req: NextRequest) {
       } catch (e) {}
     }
 
-    // Sort by newest first
+    // Sort by newest first, cap at 10 for global feed
     posts.sort((a, b) => b.createdAt - a.createdAt);
+    const limited = author ? posts : posts.slice(0, 10);
 
     return NextResponse.json({
       success: true,
-      count: posts.length,
-      posts,
+      count: limited.length,
+      posts: limited,
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

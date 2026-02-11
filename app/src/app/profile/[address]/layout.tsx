@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Connection, PublicKey } from "@solana/web3.js";
 
 // PROGRAM_ID imported from @/lib/constants
-const RPC = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.devnet.solana.com";
+const RPC = process.env.NEXT_PUBLIC_RPC_URL || "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://clawbook.lol";
 
 async function getProfileData(address: string) {

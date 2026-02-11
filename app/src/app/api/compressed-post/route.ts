@@ -32,13 +32,13 @@ import {
  */
 function getCompressionRpcUrl(): string {
   if (process.env.HELIUS_API_KEY) {
-    return `https://devnet.helius-rpc.com?api-key=${process.env.HELIUS_API_KEY}`;
+    return `https://mainnet.helius-rpc.com?api-key=${process.env.HELIUS_API_KEY}`;
   }
   if (process.env.NEXT_PUBLIC_RPC_URL) {
     return process.env.NEXT_PUBLIC_RPC_URL;
   }
   // Fallback to standard devnet (will fail for compression calls)
-  return "https://api.devnet.solana.com";
+  return "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
 }
 
 export async function POST(request: NextRequest) {

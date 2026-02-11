@@ -127,7 +127,7 @@ async function createCompressedPost(
 
   // 6. Build and sign transaction
   const connection = new (await import("@solana/web3.js")).Connection(
-    process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com"
+    process.env.NEXT_PUBLIC_RPC_URL || "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com"
   );
 
   const tx = new Transaction().add(
@@ -577,7 +577,7 @@ export default function ProfilePage() {
                     <p>
                       PDA:{" "}
                       <a
-                        href={`https://explorer.solana.com/address/${profile.pda}?cluster=devnet`}
+                        href={`https://explorer.solana.com/address/${profile.pda}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[#3b5998] hover:underline"

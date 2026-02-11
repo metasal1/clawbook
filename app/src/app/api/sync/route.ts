@@ -4,7 +4,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { getDb, initSchema } from "@/lib/db";
 
 // PROGRAM_ID imported from @/lib/constants
-const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
 const SYNC_SECRET = process.env.SYNC_SECRET || "";
 
 // Account sizes

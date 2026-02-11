@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getAllTld, findAllDomainsForTld } from "@onsol/tldparser";
 
 // PROGRAM_ID imported from @/lib/constants
-const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com";
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
 const MAINNET_RPC = "https://viviyan-bkj12u-fast-mainnet.helius-rpc.com";
 
 export async function GET() {

@@ -428,7 +428,7 @@ export default function ViewProfile() {
                     <p>
                       PDA:{" "}
                       <a
-                        href={`https://explorer.solana.com/address/${profile.pda}?cluster=devnet`}
+                        href={`https://explorer.solana.com/address/${profile.pda}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[#3b5998] hover:underline"

@@ -126,7 +126,7 @@ export default function MintPage() {
                     <p className="text-gray-600">
                       <span className="font-semibold">Asset:</span>{" "}
                       <a
-                        href={`https://solscan.io/token/${result.asset_id}?cluster=devnet`}
+                        href={`https://solscan.io/token/${result.asset_id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline break-all"
@@ -137,7 +137,7 @@ export default function MintPage() {
                     <p className="text-gray-600">
                       <span className="font-semibold">Tx:</span>{" "}
                       <a
-                        href={`https://solscan.io/tx/${result.tx_signature}?cluster=devnet`}
+                        href={`https://solscan.io/tx/${result.tx_signature}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline break-all"
@@ -200,7 +200,7 @@ export default function MintPage() {
               {history.map((h, i) => (
                 <a
                   key={h.asset_id}
-                  href={`https://solscan.io/token/${h.asset_id}?cluster=devnet`}
+                  href={`https://solscan.io/token/${h.asset_id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-center group"

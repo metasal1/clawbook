@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
-const MAINNET_VAULT = new PublicKey("8iLn3JJRujBUtes3FdV9ethaLDjhcjZSWNRadKmWTtBP");
-const MAINNET_MULTISIG = "7Bv2GatUU4TXQjQVp6WgqYwKwUvETvpVgeT19M1jTR4p";
+const MAINNET_VAULT = new PublicKey("EXTXqRTYwvuv9MpjHVnkaVaLqUPuCpoEDq2iyNykQFf8");
+const MAINNET_MULTISIG = "FUtXoDxnQfwcPAAPYPPnj8rjRfF37kTXVLcV8Jdbin3X";
 
 export function TreasuryBalance() {
   const [balance, setBalance] = useState<number | null>(null);

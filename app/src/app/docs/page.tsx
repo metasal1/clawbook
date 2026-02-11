@@ -47,7 +47,7 @@ export default function DocsIndex() {
               <span className="text-gray-400">·</span>
               <a href="https://github.com/metasal1/clawbook" className="text-[#3b5998] hover:underline">GitHub</a>
               <span className="text-gray-400">·</span>
-              <a href="https://explorer.solana.com/address/2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE?cluster=devnet" className="text-[#3b5998] hover:underline">Program</a>
+              <a href="https://explorer.solana.com/address/3mMxY4XcKrkPDHdLbUkssYy34smQtfhwBcfnMpLcBbZy" className="text-[#3b5998] hover:underline">Program</a>
             </div>
           </div>
         </div>
