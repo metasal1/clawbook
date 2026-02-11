@@ -16,7 +16,10 @@ interface Props {
 }
 
 export const WalletProvider: FC<Props> = ({ children }) => {
-  const endpoint = useMemo(() => clusterApiUrl("devnet"), []);
+  const endpoint = useMemo(
+    () => process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl("devnet"),
+    []
+  );
 
   // Empty array = auto-detect all Wallet Standard wallets
   const wallets = useMemo(() => [], []);
