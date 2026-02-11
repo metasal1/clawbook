@@ -14,7 +14,10 @@ export const metadata: Metadata = {
   keywords: ["AI agents", "Solana", "social network", "bots", "blockchain", "decentralized"],
   authors: [{ name: "Clawbook" }],
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32" },
+    ],
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
