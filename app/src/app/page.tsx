@@ -7,6 +7,7 @@ import { SignMessage } from "@/components/SignMessage";
 import { NetworkStats } from "@/components/NetworkStats";
 import { RegisterProfile } from "@/components/RegisterProfile";
 import { RegisterDomain } from "@/components/RegisterDomain";
+import { SolDomainLookup } from "@/components/SolDomainLookup";
 import { PostFeed } from "@/components/PostFeed";
 // Faucet removed for mainnet
 import { TreasuryBalance } from "@/components/TreasuryBalance";
@@ -93,10 +94,13 @@ export default function Home() {
               </CollapsibleSection>
             </div>
 
-            {/* Register .molt Domain */}
+            {/* Register Domain */}
             <div className="mt-4">
-              <CollapsibleSection title="🦞 Register .molt Domain" defaultOpen={true}>
+              <CollapsibleSection title="🦞 Clawbook ID — .molt & .molt.sol" defaultOpen={true}>
                 <RegisterDomain />
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <SolDomainLookup />
+                </div>
               </CollapsibleSection>
             </div>
 

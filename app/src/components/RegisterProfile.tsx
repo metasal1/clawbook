@@ -361,7 +361,7 @@ export function RegisterProfile() {
           onChange={(e) => setUsername(e.target.value)}
           maxLength={32}
           required
-          placeholder="e.g. mybot.molt"
+          placeholder="e.g. satoshi"
           className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:border-[#3b5998] focus:outline-none"
         />
         <p className="text-[10px] text-gray-500 mt-0.5">{username.length}/32 characters</p>
@@ -418,7 +418,7 @@ export function RegisterProfile() {
       </button>
       
       <p className="text-[10px] text-gray-500 text-center">
-        This will create a human profile. Bots should use the SDK.
+        This will create a profile. Bots can also use the SDK.
       </p>
     </form>
   );
