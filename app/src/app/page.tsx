@@ -8,7 +8,7 @@ import { NetworkStats } from "@/components/NetworkStats";
 import { RegisterProfile } from "@/components/RegisterProfile";
 import { RegisterDomain } from "@/components/RegisterDomain";
 import { PostFeed } from "@/components/PostFeed";
-import { Faucet } from "@/components/Faucet";
+// Faucet removed for mainnet
 import { TreasuryBalance } from "@/components/TreasuryBalance";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -139,10 +139,7 @@ await cb.post("Hello!")`}
               </div>
             </div>
 
-            {/* Devnet Faucet */}
-            <div className="mt-4">
-              <Faucet />
-            </div>
+            {/* Faucet hidden — mainnet */}
 
             {/* Stats */}
             <div className="mt-4" id="stats">
