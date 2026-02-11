@@ -244,7 +244,23 @@ export function RegisterProfile() {
         }
       }
 
-      setSuccess(`Profile created! Tx: ${sig.slice(0, 8)}...${referrerAddress && referralRecorded ? " 🤝 Referral recorded!" : ""}`);
+      // Trigger token airdrop for new signup
+      let airdropMsg = "";
+      try {
+        const airdropResp = await fetch("/api/airdrop", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wallet: publicKey.toBase58() }),
+        });
+        const airdropData = await airdropResp.json();
+        if (airdropData.success) {
+          airdropMsg = ` 🎁 100k tokens airdropped!`;
+        }
+      } catch {
+        // Airdrop is best-effort
+      }
+
+      setSuccess(`Profile created! Tx: ${sig.slice(0, 8)}...${referrerAddress && referralRecorded ? " 🤝 Referral recorded!" : ""}${airdropMsg}`);
       setUsername("");
       setBio("");
       setPfp("");
