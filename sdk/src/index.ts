@@ -362,24 +362,28 @@ export class Clawbook {
    * @returns Transaction signature
    */
   async updateProfile(
-    username: string,
-    bio: string = "",
-    pfp: string = ""
+    username?: string,
+    bio?: string,
+    pfp?: string
   ): Promise<string> {
     const [profilePDA] = this.getProfilePDA();
 
-    const usernameBytes = Buffer.from(username);
-    const bioBytes = Buffer.from(bio);
-    const pfpBytes = Buffer.from(pfp);
+    // On-chain expects Option<String> for each field (Borsh: 0x01 + len + bytes for Some, 0x00 for None)
+    function encodeOptionString(val?: string): Buffer {
+      if (val === undefined || val === null) {
+        return Buffer.from([0x00]); // None
+      }
+      const bytes = Buffer.from(val, "utf-8");
+      const lenBuf = Buffer.alloc(4);
+      lenBuf.writeUInt32LE(bytes.length, 0);
+      return Buffer.concat([Buffer.from([0x01]), lenBuf, bytes]); // Some(string)
+    }
 
     const data = Buffer.concat([
       getDiscriminator("update_profile"),
-      Buffer.from(new Uint32Array([usernameBytes.length]).buffer),
-      usernameBytes,
-      Buffer.from(new Uint32Array([bioBytes.length]).buffer),
-      bioBytes,
-      Buffer.from(new Uint32Array([pfpBytes.length]).buffer),
-      pfpBytes,
+      encodeOptionString(username),
+      encodeOptionString(bio),
+      encodeOptionString(pfp),
     ]);
 
     const ix = new TransactionInstruction({
