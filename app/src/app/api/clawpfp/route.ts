@@ -113,8 +113,13 @@ export async function POST(req: NextRequest) {
     const mintData = await mintRes.json();
 
     if (!mintRes.ok || !mintData.success) {
+      const friendlyError = mintData.message === "Incorrect answer"
+        ? "Challenge solver failed — please try again"
+        : mintData.error === "internal_error"
+        ? "ClawPFP service is temporarily unavailable — please try again in a moment"
+        : mintData.message || mintData.error || "Mint failed — please try again";
       return NextResponse.json(
-        { error: mintData.error || "Mint failed", challenge: challenge.question, answer },
+        { error: friendlyError, success: false },
         { status: 400 }
       );
     }

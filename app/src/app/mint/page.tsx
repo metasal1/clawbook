@@ -25,6 +25,7 @@ export default function MintPage() {
     setMinting(true);
     setError(null);
     setResult(null);
+    let retries = 0;
 
     try {
       const res = await fetch("/api/clawpfp", {
@@ -43,7 +44,30 @@ export default function MintPage() {
         setResult(mint);
         setHistory((prev) => [mint, ...prev]);
       } else {
-        setError(data.error || "Mint failed");
+        // Auto-retry once on transient errors
+        if (!data.success && retries < 1) {
+          retries++;
+          const retryRes = await fetch("/api/clawpfp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ wallet_address: publicKey!.toBase58() }),
+          });
+          const retryData = await retryRes.json();
+          if (retryData.success) {
+            const mint: MintResult = {
+              asset_id: retryData.asset_id,
+              tx_signature: retryData.tx_signature,
+              avatar_url: retryData.avatar_url,
+              mint_index: retryData.mint_index,
+            };
+            setResult(mint);
+            setHistory((prev) => [mint, ...prev]);
+          } else {
+            setError(retryData.error || "Mint failed — please try again");
+          }
+        } else {
+          setError(data.error || "Mint failed — please try again");
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
