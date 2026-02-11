@@ -9,8 +9,8 @@ const PAY_TO = process.env.X402_PAY_TO || "FUtXoDxnQfwcPAAPYPPnj8rjRfF37kTXVLcV8
 // Solana mainnet CAIP-2 identifier
 const SOLANA_MAINNET = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 
-// CDP facilitator for mainnet (requires CDP_API_KEY env), fallback to x402.org testnet
-const facilitatorUrl = process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator";
+// PayAI facilitator — Solana-first, no API key required, supports mainnet
+const facilitatorUrl = process.env.X402_FACILITATOR_URL || "https://facilitator.payai.network";
 
 const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
 
