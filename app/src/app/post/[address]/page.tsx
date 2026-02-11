@@ -25,15 +25,25 @@ interface ProfileData {
   accountType: string;
 }
 
-function parsePost(address: string, data: Buffer): PostData | null {
+function readU32LE(buf: Uint8Array, offset: number): number {
+  return buf[offset] | (buf[offset+1] << 8) | (buf[offset+2] << 16) | (buf[offset+3] << 24) >>> 0;
+}
+
+function readU64LE(buf: Uint8Array, offset: number): number {
+  const lo = readU32LE(buf, offset);
+  const hi = readU32LE(buf, offset + 4);
+  return lo + hi * 0x100000000;
+}
+
+function parsePost(address: string, data: Uint8Array): PostData | null {
   try {
-    const author = new PublicKey(data.subarray(8, 40)).toBase58();
-    const contentLen = data.readUInt32LE(40);
-    const content = data.subarray(44, 44 + contentLen).toString("utf-8");
+    const author = new PublicKey(data.slice(8, 40)).toBase58();
+    const contentLen = readU32LE(data, 40);
+    const content = new TextDecoder().decode(data.slice(44, 44 + contentLen));
     const offset = 44 + contentLen;
-    const likes = Number(data.readBigUInt64LE(offset));
-    const createdAt = Number(data.readBigUInt64LE(offset + 8));
-    const postId = Number(data.readBigUInt64LE(offset + 16));
+    const likes = readU64LE(data, offset);
+    const createdAt = readU64LE(data, offset + 8);
+    const postId = readU64LE(data, offset + 16);
     return { address, author, content, likes, createdAt, postId };
   } catch {
     return null;
@@ -58,7 +68,7 @@ export default function PostPage() {
           setError("Post not found");
           return;
         }
-        const parsed = parsePost(address, Buffer.from(info.data));
+        const parsed = parsePost(address, new Uint8Array(info.data));
         if (!parsed) {
           setError("Failed to parse post");
           return;
