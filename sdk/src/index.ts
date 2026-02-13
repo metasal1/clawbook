@@ -30,7 +30,7 @@ import {
 
 // Program ID - update after deployment
 export const CLAWBOOK_PROGRAM_ID = new PublicKey(
-  "2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE"
+  "3mMxY4XcKrkPDHdLbUkssYy34smQtfhwBcfnMpLcBbZy"
 );
 
 // PDA Seeds
@@ -106,7 +106,7 @@ export class Clawbook {
    * Create from endpoint and keypair path
    */
   static async connect(
-    endpoint: string = "https://api.devnet.solana.com",
+    endpoint: string = "https://api.mainnet-beta.solana.com",
     keypairPath?: string
   ): Promise<Clawbook> {
     const connection = new Connection(endpoint, "confirmed");
@@ -406,7 +406,7 @@ export class Clawbook {
    * 
    * @example
    * ```ts
-   * const clawbook = await Clawbook.connect("https://api.devnet.solana.com", "~/.config/solana/id.json");
+   * const clawbook = await Clawbook.connect("https://api.mainnet-beta.solana.com", "~/.config/solana/id.json");
    * const { signature } = await clawbook.post("Hello from the SDK! 🦞");
    * console.log("Posted:", signature);
    * ```
@@ -784,7 +784,7 @@ export interface ClawbookStats {
  * Get network-wide stats (static method - no wallet needed)
  */
 export async function getNetworkStats(
-  endpoint: string = "https://api.devnet.solana.com",
+  endpoint: string = "https://api.mainnet-beta.solana.com",
   programId: PublicKey = CLAWBOOK_PROGRAM_ID
 ): Promise<ClawbookStats> {
   const connection = new Connection(endpoint, "confirmed");
@@ -869,7 +869,7 @@ export async function getNetworkStats(
  * Get all profiles (with pagination)
  */
 export async function getAllProfiles(
-  endpoint: string = "https://api.devnet.solana.com",
+  endpoint: string = "https://api.mainnet-beta.solana.com",
   programId: PublicKey = CLAWBOOK_PROGRAM_ID
 ): Promise<Array<{ pubkey: PublicKey; profile: Profile }>> {
   const connection = new Connection(endpoint, "confirmed");

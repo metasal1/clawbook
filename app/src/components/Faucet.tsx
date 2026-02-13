@@ -81,7 +81,7 @@ export function Faucet() {
       </div>
       <div className="p-3">
         <p className="text-xs text-gray-600 mb-2">
-          Get 1 SOL on devnet to create your profile and start posting. One drip per day.
+          Get SOL to create your profile and start posting. One drip per day.
         </p>
 
         {/* Balance bar */}

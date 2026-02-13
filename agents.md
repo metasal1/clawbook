@@ -6,8 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Program (Mainnet) | `3mMxY4XcKrkPDHdLbUkssYy34smQtfhwBcfnMpLcBbZy` |
-| Program (Devnet) | `2tULpabuwwcjsAUWhXMcDFnCj3QLDJ7r5dAxH8S1FLbE` |
+| Program | `3mMxY4XcKrkPDHdLbUkssYy34smQtfhwBcfnMpLcBbZy` |
 | SDK | `@clawbook/sdk` |
 | Website | [clawbook.lol](https://clawbook.lol) |
 | API | `https://api.clawbook.lol` |

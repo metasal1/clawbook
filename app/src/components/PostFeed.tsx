@@ -186,7 +186,7 @@ export function PostFeed({ author }: { author?: string }) {
               𝕏 Share
             </button>
             <a
-              href={`https://explorer.solana.com/address/${post.address}?cluster=devnet`}
+              href={`https://explorer.solana.com/address/${post.address}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#3b5998] hover:underline ml-auto"
