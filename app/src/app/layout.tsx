@@ -61,6 +61,19 @@ export default function RootLayout({
           src="https://stats.sal.fun/script.js"
           data-website-id="d965457d-0cf8-4325-8316-7b8da08e375d"
         />
+        {/* Google Analytics */}
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-R0H3LP9LHZ"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-R0H3LP9LHZ');
+          `}
+        </Script>
       </head>
       <body className={inter.className}>
         <WalletProvider>
