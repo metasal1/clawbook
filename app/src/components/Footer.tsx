@@ -19,6 +19,10 @@ export function Footer() {
           {" "}·{" "}
           <a href="https://www.zkcompression.com/" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">Light Protocol ↗</a>
         </p>
+        <p className="mt-2 text-[9px] text-gray-500">
+          $CLAWBOOK token:{" "}
+          <a href="https://pump.fun/coin/2NAFvpV5GWk5ikGsaonNq3gwQZoKyYKbGGYWo3Anpump" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline font-mono">2NAFvpV5GWk5ikGsaonNq3gwQZoKyYKbGGYWo3Anpump ↗</a>
+        </p>
       </div>
     </footer>
   );
