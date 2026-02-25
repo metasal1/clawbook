@@ -65,6 +65,24 @@ export function RegisterDomain() {
     setSuccess(null);
 
     try {
+      // Pre-check: verify wallet has enough SOL before calling the API.
+      // Even "free" domains require ~0.08 SOL for account rent + tx fees.
+      const balance = await connection.getBalance(publicKey);
+      const solPriceEntry = availability?.price?.find(
+        (p: any) => p.mint === "So11111111111111111111111111111111111111112"
+      );
+      const domainFeeLamports = solPriceEntry?.pricing ?? 0;
+      const RENT_LAMPORTS = 80_000_000; // ~0.08 SOL for account creation rent
+      const TX_FEE_BUFFER = 10_000;    // tx fees
+      const requiredLamports = domainFeeLamports + RENT_LAMPORTS + TX_FEE_BUFFER;
+      if (balance < requiredLamports) {
+        const shortBy = ((requiredLamports - balance) / 1e9).toFixed(4);
+        const needed = (requiredLamports / 1e9).toFixed(4);
+        throw new Error(
+          `Not enough SOL. You need ~${needed} SOL in your wallet (includes account rent). You're short by ~${shortBy} SOL — top up and try again.`
+        );
+      }
+
       // Get registration instructions from AllDomains
       const res = await fetch("/api/domain/register", {
         method: "POST",
@@ -83,7 +101,9 @@ export function RegisterDomain() {
       }
 
       if (data.insufficientFunds) {
-        throw new Error("Insufficient funds. You need SOL or USDC to register.");
+        throw new Error(
+          `Not enough SOL in your wallet. You need ~0.08 SOL to cover account rent + transaction fees. Top up your wallet and try again.`
+        );
       }
 
       if (!data.instructionBase64) {
@@ -131,24 +151,43 @@ export function RegisterDomain() {
       setDomainName("");
     } catch (e: any) {
       console.error("Registration error:", e);
-      setError(e.message || "Failed to register domain");
+      const msg: string = e.message || "Failed to register domain";
+      // Parse Solana simulation errors for insufficient lamports
+      const lamportsMatch = msg.match(/insufficient lamports (\d+),\s*need (\d+)/i);
+      if (lamportsMatch) {
+        const have = (parseInt(lamportsMatch[1]) / 1e9).toFixed(4);
+        const need = (parseInt(lamportsMatch[2]) / 1e9).toFixed(4);
+        setError(`Not enough SOL — you have ${have} SOL but need ~${need} SOL. Top up your wallet and try again.`);
+      } else if (msg.toLowerCase().includes("simulation failed")) {
+        setError("Transaction simulation failed. Make sure you have at least 0.1 SOL in your wallet and try again.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setRegistering(false);
     }
   }
 
   // Format price display
+  // Note: AllDomains returns 0 SOL for the domain fee, but ~0.08 SOL in account
+  // rent is always required on top. We show the true estimated cost.
+  const RENT_ESTIMATE_SOL = 0.08; // approx rent for domain account creation
   function formatPrice(price: any): string {
-    if (!price || !Array.isArray(price) || price.length === 0) return "Free";
-    // price is array of { mint, pricing }
+    if (!price || !Array.isArray(price) || price.length === 0) {
+      return `~${RENT_ESTIMATE_SOL} SOL (rent)`;
+    }
     const solPrice = price.find((p: any) => p.mint === "So11111111111111111111111111111111111111112");
-    if (solPrice) return `${(solPrice.pricing / 1e9).toFixed(4)} SOL`;
-    // USDC
+    if (solPrice) {
+      const domainFee = solPrice.pricing / 1e9;
+      const total = domainFee + RENT_ESTIMATE_SOL;
+      if (domainFee === 0) return `~${RENT_ESTIMATE_SOL} SOL (rent)`;
+      return `~${total.toFixed(4)} SOL`;
+    }
     const usdcPrice = price.find((p: any) =>
       p.mint === "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
     );
-    if (usdcPrice) return `$${(usdcPrice.pricing / 1e6).toFixed(2)} USDC`;
-    return `${price[0].pricing} tokens`;
+    if (usdcPrice) return `$${(usdcPrice.pricing / 1e6).toFixed(2)} USDC + rent`;
+    return `~${RENT_ESTIMATE_SOL} SOL (rent)`;
   }
 
   return (
@@ -202,13 +241,18 @@ export function RegisterDomain() {
                 </span>
               </div>
               {connected ? (
-                <button
-                  onClick={registerDomain}
-                  disabled={registering}
-                  className="w-full py-1.5 text-sm font-bold text-white bg-[#ff6b35] rounded hover:bg-[#e55a25] disabled:bg-gray-400 transition-colors"
-                >
-                  {registering ? "Registering..." : `Register ${availability.domain}`}
-                </button>
+                <>
+                  <button
+                    onClick={registerDomain}
+                    disabled={registering}
+                    className="w-full py-1.5 text-sm font-bold text-white bg-[#ff6b35] rounded hover:bg-[#e55a25] disabled:bg-gray-400 transition-colors"
+                  >
+                    {registering ? "Registering..." : `Register ${availability.domain}`}
+                  </button>
+                  <p className="text-[10px] text-gray-500 mt-1">
+                    ⚠️ Requires ~0.08 SOL in your wallet for account rent + fees
+                  </p>
+                </>
               ) : (
                 <p className="text-gray-600">Connect wallet to register</p>
               )}
