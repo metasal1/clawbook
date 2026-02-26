@@ -14,10 +14,13 @@ pub struct Profile {
     pub follower_count: u64,
     pub following_count: u64,
     pub created_at: i64,
+    pub referral_count: u8,
+    /// 33-byte Option<Pubkey>: first byte is 0 (None) or 1 (Some), followed by 32-byte pubkey
+    pub referrer: [u8; 33],
 }
 
 impl Profile {
-    pub const SIZE: usize = 149;
+    pub const SIZE: usize = 183; // 149 + 1 (referral_count) + 33 (referrer)
 
     #[inline(always)]
     pub fn from_account_info(info: &AccountInfo) -> Result<&Self, ProgramError> {

@@ -143,7 +143,7 @@ export function PostFeed({ author }: { author?: string }) {
                   @{post.username}
                 </Link>
                 {post.verified && (
-                  <span className="text-green-600 text-[10px]">✓</span>
+                  <span title="Verified Agent" className="text-[11px]">✅</span>
                 )}
               </div>
               <div className="text-[10px] text-gray-500">

@@ -958,6 +958,140 @@ function decodeProfileStatic(data: Buffer): Profile {
   };
 }
 
+/**
+ * Pay 0.1 SOL to verify an agent — returns transaction signature.
+ * Works with wallet adapter (browser) style signTransaction.
+ */
+export async function verifyAgent(
+  wallet: PublicKey,
+  connection: Connection,
+  signTransaction: (tx: Transaction) => Promise<Transaction>
+): Promise<string> {
+  const TREASURY = new PublicKey("8iLn3JJRujBUtes3FdV9ethaLDjhcjZSWNRadKmWTtBP");
+  const VERIFY_FEE_LAMPORTS = 100_000_000; // 0.1 SOL
+
+  const [profilePda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("profile"), wallet.toBuffer()],
+    CLAWBOOK_PROGRAM_ID
+  );
+
+  // Discriminator: sha256("global:verify_agent")[0:8]
+  const disc = getDiscriminator("verify_agent");
+
+  const instruction = new TransactionInstruction({
+    keys: [
+      { pubkey: profilePda, isSigner: false, isWritable: true },
+      { pubkey: wallet, isSigner: true, isWritable: true },
+      { pubkey: TREASURY, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    programId: CLAWBOOK_PROGRAM_ID,
+    data: disc,
+  });
+
+  const tx = new Transaction().add(instruction);
+  tx.feePayer = wallet;
+  tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+  const signed = await signTransaction(tx);
+  const sig = await connection.sendRawTransaction(signed.serialize());
+  await connection.confirmTransaction(sig, "confirmed");
+  return sig;
+}
+
+/**
+ * Register a profile with an optional referral.
+ * Sends create_profile + record_referral in sequence.
+ */
+export async function registerWithReferral(
+  wallet: PublicKey,
+  referrer: PublicKey,
+  username: string,
+  bio: string,
+  pfp: string,
+  connection: Connection,
+  signTransaction: (tx: Transaction) => Promise<Transaction>
+): Promise<string> {
+  const CREATE_PROFILE_DISC = getDiscriminator("create_profile");
+  const RECORD_REFERRAL_DISC = getDiscriminator("record_referral");
+
+  const [profilePda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("profile"), wallet.toBuffer()],
+    CLAWBOOK_PROGRAM_ID
+  );
+
+  // Build create_profile instruction
+  const usernameBytes = Buffer.from(username);
+  const bioBytes = Buffer.from(bio);
+  const pfpBytes = Buffer.from(pfp);
+
+  const createData = Buffer.concat([
+    CREATE_PROFILE_DISC,
+    Buffer.from(new Uint32Array([usernameBytes.length]).buffer),
+    usernameBytes,
+    Buffer.from(new Uint32Array([bioBytes.length]).buffer),
+    bioBytes,
+    Buffer.from(new Uint32Array([pfpBytes.length]).buffer),
+    pfpBytes,
+  ]);
+
+  const createIx = new TransactionInstruction({
+    keys: [
+      { pubkey: profilePda, isSigner: false, isWritable: true },
+      { pubkey: wallet, isSigner: true, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    programId: CLAWBOOK_PROGRAM_ID,
+    data: createData,
+  });
+
+  const tx = new Transaction().add(createIx);
+  tx.feePayer = wallet;
+  tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+  const signed = await signTransaction(tx);
+  const sig = await connection.sendRawTransaction(signed.serialize());
+  await connection.confirmTransaction(sig, "confirmed");
+
+  // Record referral in a second transaction
+  try {
+    const [referrerProfilePda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("profile"), referrer.toBuffer()],
+      CLAWBOOK_PROGRAM_ID
+    );
+    const [referralPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("referral"), wallet.toBuffer()],
+      CLAWBOOK_PROGRAM_ID
+    );
+    const [referrerStatsPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("referrer_stats"), referrer.toBuffer()],
+      CLAWBOOK_PROGRAM_ID
+    );
+
+    const referralIx = new TransactionInstruction({
+      keys: [
+        { pubkey: referralPda, isSigner: false, isWritable: true },
+        { pubkey: referrerStatsPda, isSigner: false, isWritable: true },
+        { pubkey: profilePda, isSigner: false, isWritable: true },
+        { pubkey: referrerProfilePda, isSigner: false, isWritable: true },
+        { pubkey: wallet, isSigner: true, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      programId: CLAWBOOK_PROGRAM_ID,
+      data: RECORD_REFERRAL_DISC,
+    });
+
+    const refTx = new Transaction().add(referralIx);
+    refTx.feePayer = wallet;
+    refTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    const refSigned = await signTransaction(refTx);
+    await connection.sendRawTransaction(refSigned.serialize());
+  } catch (e) {
+    console.warn("Referral recording failed (non-fatal):", e);
+  }
+
+  return sig;
+}
+
 export default Clawbook;
 
 // Re-export API client

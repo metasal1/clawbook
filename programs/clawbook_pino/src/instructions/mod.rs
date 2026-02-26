@@ -11,6 +11,7 @@ mod record_referral;
 mod update_profile;
 mod claim_bot;
 mod migrate_profile;
+mod verify_agent;
 
 pub use create_profile::create_profile;
 pub use create_bot_profile::create_bot_profile;
@@ -25,3 +26,4 @@ pub use record_referral::record_referral;
 pub use update_profile::update_profile;
 pub use claim_bot::claim_bot;
 pub use migrate_profile::migrate_profile;
+pub use verify_agent::verify_agent;

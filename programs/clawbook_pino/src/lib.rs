@@ -50,6 +50,7 @@ const RECORD_REFERRAL_DISC: [u8; 8] = [0xe8, 0x09, 0xf2, 0x33, 0xed, 0x10, 0xac,
 const UPDATE_PROFILE_DISC: [u8; 8] = [0x62, 0x43, 0x63, 0xce, 0x56, 0x73, 0xaf, 0x01];
 const CLAIM_BOT_DISC: [u8; 8] = [0x44, 0x2f, 0x24, 0xef, 0x6b, 0xa5, 0x27, 0xda];
 const MIGRATE_PROFILE_DISC: [u8; 8] = [0xe0, 0xbb, 0x84, 0xbd, 0xb9, 0xa3, 0xb7, 0xed];
+const VERIFY_AGENT_DISC: [u8; 8] = [0x3c, 0x1d, 0xa9, 0x52, 0x7e, 0xb4, 0x0f, 0x6a];
 
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -77,6 +78,7 @@ pub fn process_instruction(
         UPDATE_PROFILE_DISC => instructions::update_profile(program_id, accounts, data),
         CLAIM_BOT_DISC => instructions::claim_bot(program_id, accounts, data),
         MIGRATE_PROFILE_DISC => instructions::migrate_profile(program_id, accounts, data),
+        VERIFY_AGENT_DISC => instructions::verify_agent(program_id, accounts, data),
         _ => Err(ProgramError::InvalidInstructionData),
     }
 }

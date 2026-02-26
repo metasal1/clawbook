@@ -81,11 +81,24 @@ pub fn record_referral(
     // Deserialize state accounts
     let mut referral_state = Referral::from_account_info_mut(referral)?;
     let mut referrer_stats_state = ReferrerStats::from_account_info_mut(referrer_stats)?;
+    // Note: referrer_profile must be writable to update referral_count and verified status
     let mut referrer_profile_state = Profile::from_account_info_mut(referrer_profile)?;
     referral_state.referred = *authority.key () ;
     referral_state.referrer = referrer_profile_state.authority ;
     referral_state.created_at = Clock::get () ?.unix_timestamp ;
     referrer_stats_state.authority = referrer_profile_state.authority ;
     referrer_stats_state.referral_count += 1 ;
+
+    // Store referrer on the new agent's profile
+    let mut profile_state = Profile::from_account_info_mut(profile)?;
+    profile_state.referrer[0] = 1; // Some
+    profile_state.referrer[1..33].copy_from_slice(&referrer_profile_state.authority);
+
+    // Increment referrer's referral_count and grant free verification at 8 referrals
+    referrer_profile_state.referral_count = referrer_profile_state.referral_count.saturating_add(1);
+    if referrer_profile_state.referral_count >= 8 {
+        referrer_profile_state.verified = true;
+    }
+
     Ok(())
 }
