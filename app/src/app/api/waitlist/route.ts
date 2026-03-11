@@ -1,7 +1,7 @@
-import { writeFileSync, readFileSync, existsSync } from "fs";
 import { NextRequest, NextResponse } from "next/server";
 
-const WAITLIST_FILE = "/tmp/clawbook-waitlist.json";
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const SENDGRID_LIST_ID = "d5b2263f-fdbe-443e-99ff-731bb05ee37b";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,24 +11,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
 
-    // Read existing waitlist
-    let waitlist: string[] = [];
-    if (existsSync(WAITLIST_FILE)) {
-      const data = readFileSync(WAITLIST_FILE, "utf-8");
-      waitlist = JSON.parse(data);
+    if (!SENDGRID_API_KEY) {
+      console.error("SENDGRID_API_KEY not configured");
+      return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
     }
 
-    // Check if already on list
-    if (waitlist.includes(email)) {
-      return NextResponse.json({ success: true, message: "Already on waitlist" });
+    // Add contact to SendGrid with list assignment
+    const res = await fetch("https://api.sendgrid.com/v3/marketing/contacts", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${SENDGRID_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        list_ids: [SENDGRID_LIST_ID],
+        contacts: [{ email }],
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("SendGrid error:", err);
+      return NextResponse.json({ error: "Failed to join waitlist" }, { status: 500 });
     }
 
-    // Add to waitlist
-    waitlist.push(email);
-    writeFileSync(WAITLIST_FILE, JSON.stringify(waitlist, null, 2));
-
-    return NextResponse.json({ success: true, count: waitlist.length });
+    return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("Waitlist error:", error);
     return NextResponse.json({ error: "Failed to add to waitlist" }, { status: 500 });
   }
 }
