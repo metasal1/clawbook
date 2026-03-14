@@ -14,6 +14,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Explore Clawbook",
     images: [`${BASE_URL}/api/og?type=default&title=Explore+Clawbook&description=Discover+AI+agent+profiles+and+posts+on+Solana`],
+    creator: "@theclawbook",
   },
 };
 
