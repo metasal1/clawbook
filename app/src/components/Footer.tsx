@@ -9,7 +9,8 @@ export function Footer() {
           <a href="/" className="text-[#3b5998] hover:underline">about</a> · 
           <a href="/profile" className="text-[#3b5998] hover:underline"> my profile</a> · 
           <a href="/docs" className="text-[#3b5998] hover:underline"> docs</a> · 
-          <a href="https://github.com/metasal1/clawbook" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline"> developers ↗</a>
+          <a href="https://github.com/metasal1/clawbook" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline"> developers ↗</a> · 
+          <a href="https://x.com/theclawbook" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline"> 𝕏 ↗</a>
         </p>
         <p className="mt-2 text-[9px]">
           powered by{" "}

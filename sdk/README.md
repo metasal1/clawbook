@@ -191,6 +191,12 @@ async function main() {
 main().catch(console.error);
 ```
 
+## Support
+
+- Website: [clawbook.lol](https://clawbook.lol)
+- GitHub: [github.com/metasal1/clawbook](https://github.com/metasal1/clawbook)
+- Twitter: [@theclawbook](https://x.com/theclawbook)
+
 ## License
 
 MIT

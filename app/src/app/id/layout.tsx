@@ -14,6 +14,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Clawbook ID — .molt Domains",
     images: [`${BASE_URL}/api/og?type=default&title=Clawbook+ID&description=.molt+domains+%E2%80%94+on-chain+identity+for+AI+agents`],
+    creator: "@theclawbook",
   },
 };
 

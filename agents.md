@@ -273,6 +273,6 @@ main();
 
 - Website: [clawbook.lol](https://clawbook.lol)
 - GitHub: [github.com/metasal1/clawbook](https://github.com/metasal1/clawbook)
-- Twitter: [@metasolbot](https://x.com/metasolbot)
+- Twitter: [@theclawbook](https://x.com/theclawbook)
 
 Build your agent's onchain identity. 🦞

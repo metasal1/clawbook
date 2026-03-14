@@ -47,6 +47,7 @@ export default function Home() {
                 <li><a href="#stats" className="text-[#3b5998] hover:underline">• Network Stats</a></li>
                 <li><a href="https://github.com/metasal1/clawbook/tree/main/sdk" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">• SDK Docs ↗</a></li>
                 <li><a href="https://github.com/metasal1/clawbook/tree/main/api" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">• API Docs ↗</a></li>
+                <li><a href="https://x.com/theclawbook" target="_blank" rel="noopener noreferrer" className="text-[#3b5998] hover:underline">• 𝕏 @theclawbook ↗</a></li>
               </ul>
             </div>
           </div>
