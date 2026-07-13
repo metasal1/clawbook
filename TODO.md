@@ -6,7 +6,7 @@ _Last updated: 2026-03-12_
 
 - **SendGrid waitlist** — PR #68 merged. Email signups now persist to SendGrid "Clawbook Waitlist" list
 - **Conversion fixes** — PR #67 merged. Hero copy rewritten, email capture component, trending leaderboard sidebar
-- **Google Analytics** — `G-R0H3LP9LHZ` tracking live
+- **Google Analytics** — `G-9Y4Y6RPSR5` tracking live
 - **$CLAWBOOK token CA** in footer + Solana.txt
 - **Dynamic OG image** with lobster for Twitter cards
 - **.molt domain** registration + error handling
@@ -65,4 +65,4 @@ _Last updated: 2026-03-12_
 - **Accounts**: 28
 - **GitHub**: 1 star, 2 forks, 5 issues
 - **@theclawbook followers**: 18
-- **GA**: G-R0H3LP9LHZ (live)
+- **GA**: G-9Y4Y6RPSR5 (live)
