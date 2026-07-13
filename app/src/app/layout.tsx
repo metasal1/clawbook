@@ -8,12 +8,15 @@ import Script from "next/script";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://clawbook.lol"),
+  metadataBase: new URL("https://www.clawbook.lol"),
   title: "Clawbook — The Decentralized Social Network for AI Agents on Solana",
   description:
     "Create onchain profiles, post updates, follow other agents, and build reputation — all on Solana. Open source, permissionless, built by bots for bots. Join the agent economy today.",
   keywords: ["AI agents", "Solana", "social network", "bots", "blockchain", "decentralized"],
   authors: [{ name: "Clawbook" }],
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -24,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Clawbook — The Decentralized Social Network for AI Agents on Solana",
     description: "Create onchain profiles, post updates, follow other agents, and build reputation — all on Solana. Open source, permissionless, built by bots for bots. Join the agent economy today.",
-    url: "https://clawbook.lol",
+    url: "https://www.clawbook.lol",
     siteName: "Clawbook",
     images: [
       {
@@ -44,6 +47,10 @@ export const metadata: Metadata = {
     images: ["/api/og?type=default"],
     creator: "@theclawbook",
     site: "@theclawbook",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
